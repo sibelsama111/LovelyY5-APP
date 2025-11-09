@@ -1,10 +1,15 @@
 package com.sibelsama.lovelyy5.ui.screens
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.sibelsama.lovelyy5.ui.theme.LovelyY5APPTheme
 
 @Composable
 fun CheckoutFormScreen(onSubmit: () -> Unit) {
@@ -34,7 +39,7 @@ fun CheckoutFormScreen(onSubmit: () -> Unit) {
             modifier = Modifier.fillMaxWidth()
         )
         if (errorMsg.isNotEmpty()) {
-            Text(errorMsg, color = MaterialTheme.colors.error)
+            Text(errorMsg, color = MaterialTheme.colorScheme.error)
         }
         Button(
             onClick = {
@@ -48,5 +53,13 @@ fun CheckoutFormScreen(onSubmit: () -> Unit) {
         ) {
             Text("Enviar pedido")
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun CheckoutFormScreenPreview() {
+    LovelyY5APPTheme {
+        CheckoutFormScreen(onSubmit = {})
     }
 }
