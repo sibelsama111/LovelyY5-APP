@@ -45,16 +45,17 @@ fun NavGraph(
     var currentScreen by remember { mutableStateOf<Screen>(Screen.Home) }
     val orders by orderViewModel.orders.collectAsState()
     val cartItems by cartViewModel.cartItems.collectAsState()
+    var pendingShippingDetails by remember { mutableStateOf<com.sibelsama.lovelyy5.model.ShippingDetails?>(null) }
 
     when (val screen = currentScreen) {
         is Screen.Home -> HomeScreen(
-            onProductClick = { currentScreen = Screen.Products },
+            onProductClick = { _ -> currentScreen = Screen.Products },
             onCartClick = { currentScreen = Screen.Cart },
             onOrdersClick = { currentScreen = Screen.OrderList },
             cartViewModel = cartViewModel
         )
         is Screen.Products -> ProductListScreen(
-            onProductClick = { /* TODO: Implement product detail screen navigation */ },
+            onProductClick = { _ -> /* TODO: Implement product detail screen navigation */ },
             onCartClick = { currentScreen = Screen.Cart },
             cartViewModel = cartViewModel
         )
@@ -65,18 +66,29 @@ fun NavGraph(
         )
         is Screen.ShippingForm -> ShippingFormScreen(
             onSubmit = { shippingDetails ->
-                // Guardar datos y pasar a checkout
+                pendingShippingDetails = shippingDetails
                 currentScreen = Screen.Checkout
             },
             onCancel = { currentScreen = Screen.Cart }
         )
-        is Screen.Checkout -> CheckoutFormScreen(
-            onSubmit = { shippingDetails ->
-                orderViewModel.createOrder(cartItems, shippingDetails)
-                cartViewModel.clearCart()
-                currentScreen = Screen.OrderList
+        is Screen.Checkout -> {
+            val sd = pendingShippingDetails
+            if (sd != null) {
+                CheckoutFormScreen(
+                    shippingDetails = sd,
+                    products = cartItems.entries.map { it.key to it.value },
+                    onConfirm = {
+                        orderViewModel.createOrder(cartItems, sd)
+                        pendingShippingDetails = null
+                        cartViewModel.clearCart()
+                        currentScreen = Screen.OrderList
+                    }
+                )
+            } else {
+                // no shipping details: go back to shipping form
+                currentScreen = Screen.ShippingForm
             }
-        )
+        }
         is Screen.OrderList -> OrderListScreen(
             orders = orders,
             onOrderClick = { orderId ->
@@ -96,77 +108,6 @@ fun NavGraph(
         }
     }
 }
-
-@Composable
-fun OrderListScreen(orders: List<Order>, onOrderClick: (String) -> Unit) {
-    Column(modifier = Modifier.fillMaxSize()) {
-        AppHeader()
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = "Mis Pedidos",
-            style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-            modifier = Modifier.padding(horizontal = 16.dp)
-        )
-        if (orders.isEmpty()) {
-            Text("No tienes pedidos realizados", modifier = Modifier.padding(16.dp))
-        } else {
-            LazyColumn(
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                items(orders) { order ->
-                    OrderListItem(order = order, onOrderClick = onOrderClick)
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun OrderListItem(order: Order, onOrderClick: (String) -> Unit) {
-    Card(
-        modifier = Modifier.fillMaxWidth().clickable { onOrderClick(order.id) },
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text("Order ID: ${order.id.take(8)}...", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
-            Text("Total: $${order.totalAmount.toInt()} CLP", style = MaterialTheme.typography.bodyMedium)
-            Text("Items: ${order.items.size}", style = MaterialTheme.typography.bodySmall)
-        }
-    }
-}
-
-@Composable
-fun OrderDetailScreen(order: Order) {
-    Column(modifier = Modifier.fillMaxSize()) {
-        AppHeader()
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = "Detalle del Pedido",
-            style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-            modifier = Modifier.padding(horizontal = 16.dp)
-        )
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text("Order ID: ${order.id}", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
-            Text("Total: $${order.totalAmount.toInt()} CLP", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
-            Spacer(modifier = Modifier.height(8.dp))
-            Text("Dirección de Envío:", style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold))
-            Text("  Nombre: ${order.shippingDetails.name}")
-            Text("  Dirección: ${order.shippingDetails.address}")
-            Text("  Ciudad: ${order.shippingDetails.city}")
-            Text("  Código Postal: ${order.shippingDetails.postalCode}")
-            Spacer(modifier = Modifier.height(16.dp))
-            Text("Productos:", style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold))
-            order.items.forEach { (product, quantity) ->
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text("${product.name} (x$quantity)")
-                    Text("$${(product.price * quantity).toInt()} CLP")
-                }
-            }
-        }
-    }
-}
-
 @Preview(showBackground = true)
 @Composable
 fun NavGraphPreview() {
