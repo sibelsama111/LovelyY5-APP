@@ -1,17 +1,29 @@
 package com.sibelsama.lovelyy5.ui.screens
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalContext
+import android.os.VibrationEffect
+import android.os.Vibrator
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.sibelsama.lovelyy5.model.Order
+import com.sibelsama.lovelyy5.model.Product
 import com.sibelsama.lovelyy5.model.ShippingDetails
 import com.sibelsama.lovelyy5.ui.components.AppHeader
 import com.sibelsama.lovelyy5.ui.theme.LovelyY5APPTheme
@@ -30,102 +42,126 @@ fun validateEmail(email: String): Boolean {
     return "@" in email && "." in email
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CheckoutFormScreen(onSubmit: (ShippingDetails) -> Unit) {
-    var rut by remember { mutableStateOf("") }
-    var isRutError by remember { mutableStateOf(false) }
-    var names by remember { mutableStateOf("") }
-    var lastNames by remember { mutableStateOf("") }
-    var phone by remember { mutableStateOf("+56 ") }
-    var isPhoneError by remember { mutableStateOf(false) }
-    var email by remember { mutableStateOf("") }
-    var isEmailError by remember { mutableStateOf(false) }
-    var address by remember { mutableStateOf("") }
-    val regions = listOf(
-        "I - Región de Tarapacá", "II - Región de Antofagasta", "III - Región de Atacama",
-        "IV - Región de Coquimbo", "V - Región de Valparaíso", "VI - Región de O'Higgins",
-        "VII - Región del Maule", "VIII - Región del Biobío", "IX - Región de La Araucanía",
-        "X - Región de Los Lagos", "XI - Región de Aysén", "XII - Región de Magallanes",
-        "RM - Región Metropolitana", "XIV - Región de Los Ríos", "XV - Región de Arica y Parinacota",
-        "XVI - Región de Ñuble"
-    )
-    var selectedRegion by remember { mutableStateOf(regions[0]) }
-    var expanded by remember { mutableStateOf(false) }
+fun CheckoutFormScreen(
+    shippingDetails: ShippingDetails = ShippingDetails(
+        rut = "20.XXX.XXX-K",
+        names = "Laurita Jimenez",
+        lastNames = "",
+        phone = "+56 9 9999 9999",
+        email = "laurita.jiji@hotmail.com",
+        address = "Calle verde #35, comuna segura",
+        region = "XV - Región de Arica y Parinacota"
+    ),
+    products: List<Pair<Product, Int>> = listOf(
+        Product(1, "iPad Air", "Rose Gold - 128 GB", 213000.0) to 3,
+        Product(2, "iPhone 13 mini", "Space grey - 1TB GB", 213000.0) to 1
+    ),
+    shippingFee: Double = 5000.0,
+    onConfirm: () -> Unit = {}
+) {
+    val subtotal = products.sumOf { (product, qty) -> product.price * qty }
+    val total = subtotal + shippingFee
 
-    fun validateFields(): Boolean {
-        isRutError = !validateRut(rut)
-        isPhoneError = !validatePhone(phone)
-        isEmailError = !validateEmail(email)
-        return !isRutError && !isPhoneError && !isEmailError && names.isNotBlank() && lastNames.isNotBlank() && address.isNotBlank()
-    }
+    var showConfirmation by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     Scaffold(
-        topBar = { AppHeader() },
-        content = {
+        topBar = {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(top = 16.dp, start = 8.dp, end = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = { /* TODO: back navigation */ }) {
+                    Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
+                }
+                Spacer(modifier = Modifier.weight(1f))
+                Text(
+                    text = "Checkout",
+                    style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                    modifier = Modifier.weight(8f),
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.weight(1f))
+            }
+        }
+    ) { innerPadding ->
+        Box(modifier = Modifier.fillMaxSize()) {
             Column(
                 modifier = Modifier
-                    .padding(it)
-                    .padding(16.dp)
+                    .padding(innerPadding)
+                    .padding(horizontal = 16.dp)
                     .verticalScroll(rememberScrollState())
             ) {
-                Text("Formulario de Despacho", style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold))
-                Spacer(modifier = Modifier.height(16.dp))
-
-                OutlinedTextField(value = rut, onValueChange = { rut = it }, label = { Text("RUT (XX.XXX.XXX-X)") }, isError = isRutError, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = names, onValueChange = { names = it }, label = { Text("Nombres") }, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = lastNames, onValueChange = { lastNames = it }, label = { Text("Apellidos") }, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = phone, onValueChange = { phone = it }, label = { Text("Teléfono (+56 X XXXX XXXX)") }, isError = isPhoneError, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone), modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = email, onValueChange = { email = it }, label = { Text("Correo Electrónico") }, isError = isEmailError, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email), modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = address, onValueChange = { address = it }, label = { Text("Dirección (calle #25, comuna)") }, modifier = Modifier.fillMaxWidth())
-
-                Box {
-                    OutlinedTextField(
-                        value = selectedRegion,
-                        onValueChange = { },
-                        label = { Text("Región") },
-                        readOnly = true,
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                        modifier = Modifier.fillMaxWidth().clickable { expanded = true }
-                    )
-                    ExposedDropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false },
-                    ) {
-                        regions.forEach { region ->
-                            DropdownMenuItem(text = { Text(region) }, onClick = { selectedRegion = region; expanded = false })
-                        }
-                    }
-                }
-
+                // ...existing code...
                 Spacer(modifier = Modifier.height(24.dp))
                 Button(
                     onClick = {
-                        if (validateFields()) {
-                            val shippingDetails = ShippingDetails(
-                                name = names,
-                                address = address,
-                                city = selectedRegion, // Assuming region is the city for simplicity
-                                postalCode = "", // TODO: Add postal code field
-                                email = email,
-                                phone = phone
-                            )
-                            onSubmit(shippingDetails)
+                        showConfirmation = true
+                        onConfirm()
+                        // Vibración al confirmar
+                        val vibrator = context.getSystemService(android.content.Context.VIBRATOR_SERVICE) as? Vibrator
+                        vibrator?.let {
+                            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                                it.vibrate(VibrationEffect.createOneShot(200, VibrationEffect.DEFAULT_AMPLITUDE))
+                            } else {
+                                @Suppress("DEPRECATION")
+                                it.vibrate(200)
+                            }
                         }
                     },
-                    modifier = Modifier.fillMaxWidth().height(48.dp)
+                    modifier = Modifier.fillMaxWidth().height(48.dp),
+                    shape = RoundedCornerShape(24.dp)
                 ) {
-                    Text("Confirmar Compra")
+                    Text("Confirmar compra", style = MaterialTheme.typography.titleMedium)
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
+            if (showConfirmation) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Card(
+                        modifier = Modifier
+                            .padding(32.dp)
+                            .clip(RoundedCornerShape(16.dp)),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(24.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "¡Gracias por confiar en nosotros!\nPuedes ver tus pedidos desde",
+                                style = MaterialTheme.typography.bodyLarge,
+                                textAlign = TextAlign.Center
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "aquí",
+                                style = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.primary),
+                                modifier = Modifier.clickable {
+                                    showConfirmation = false
+                                    // Navegar a pantalla de pedidos
+                                    onConfirm() // Puedes usar un callback para cambiar de pantalla
+                                }
+                            )
+                        }
+                    }
                 }
             }
         }
-    )
+    }
 }
 
 @Preview(showBackground = true)
 @Composable
 fun CheckoutFormScreenPreview() {
     LovelyY5APPTheme {
-        CheckoutFormScreen(onSubmit = {})
+        CheckoutFormScreen()
     }
 }

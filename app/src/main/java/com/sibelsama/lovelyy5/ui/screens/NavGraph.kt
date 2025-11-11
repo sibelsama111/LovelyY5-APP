@@ -31,6 +31,7 @@ sealed class Screen {
     object Home : Screen()
     object Products : Screen()
     object Cart : Screen()
+    object ShippingForm : Screen()
     object Checkout : Screen()
     object OrderList : Screen()
     data class OrderDetail(val orderId: String) : Screen()
@@ -58,13 +59,21 @@ fun NavGraph(
             cartViewModel = cartViewModel
         )
         is Screen.Cart -> CartScreen(
-            onCheckoutClick = { currentScreen = Screen.Checkout },
+            onConfirmProducts = { currentScreen = Screen.ShippingForm },
+            onClearCart = { cartViewModel.clearCart() },
             cartViewModel = cartViewModel
+        )
+        is Screen.ShippingForm -> ShippingFormScreen(
+            onSubmit = { shippingDetails ->
+                // Guardar datos y pasar a checkout
+                currentScreen = Screen.Checkout
+            },
+            onCancel = { currentScreen = Screen.Cart }
         )
         is Screen.Checkout -> CheckoutFormScreen(
             onSubmit = { shippingDetails ->
                 orderViewModel.createOrder(cartItems, shippingDetails)
-                cartViewModel.clearCart() // Assuming you add a clearCart method to CartViewModel
+                cartViewModel.clearCart()
                 currentScreen = Screen.OrderList
             }
         )
@@ -75,9 +84,12 @@ fun NavGraph(
             }
         )
         is Screen.OrderDetail -> {
-            val order = orderViewModel.getOrderById(screen.orderId)
+            var order by remember { mutableStateOf<com.sibelsama.lovelyy5.model.Order?>(null) }
+            LaunchedEffect(screen.orderId) {
+                order = orderViewModel.getOrderById(screen.orderId)
+            }
             if (order != null) {
-                OrderDetailScreen(order = order)
+                OrderDetailScreen(order = order!!)
             } else {
                 Text("Pedido no encontrado")
             }

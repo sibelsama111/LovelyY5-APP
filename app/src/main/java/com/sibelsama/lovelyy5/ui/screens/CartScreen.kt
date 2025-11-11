@@ -18,63 +18,144 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sibelsama.lovelyy5.R
 import com.sibelsama.lovelyy5.model.Product
 import com.sibelsama.lovelyy5.ui.theme.LovelyY5APPTheme
+import androidx.compose.ui.platform.LocalContext
+import android.os.VibrationEffect
+import android.os.Vibrator
 import com.sibelsama.lovelyy5.ui.viewmodels.CartViewModel
 import com.sibelsama.lovelyy5.ui.components.AppHeader
 
 @Composable
-fun CartScreen(onCheckoutClick: () -> Unit, cartViewModel: CartViewModel = viewModel()) {
+fun CartScreen(
+    onConfirmProducts: () -> Unit,
+    onClearCart: () -> Unit,
+    cartViewModel: CartViewModel = viewModel()
+) {
     val cartItems by cartViewModel.cartItems.collectAsState()
-    val total = cartItems.entries.sumOf { (product, quantity) -> product.price * quantity }
+    val subtotal = cartItems.entries.sumOf { (product, quantity) -> product.price * quantity }
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        AppHeader()
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = "Carrito de Compras",
-            style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-            modifier = Modifier.padding(horizontal = 16.dp)
-        )
-        if (cartItems.isEmpty()) {
-            Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                Text("Tu carrito está vacío")
-            }
-        } else {
-            LazyColumn(
-                modifier = Modifier.weight(1f),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+    val context = LocalContext.current
+
+    Scaffold(
+        topBar = {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(top = 16.dp, start = 8.dp, end = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                items(cartItems.entries.toList()) { (product, quantity) ->
-                    CartItem(
-                        product = product,
-                        quantity = quantity,
-                        onQuantityChange = { newQuantity ->
-                            cartViewModel.updateQuantity(product, newQuantity)
-                        },
-                        onRemove = { cartViewModel.removeFromCart(product) }
-                    )
+                IconButton(onClick = { /* TODO: back navigation */ }) {
+                    Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
                 }
+                Spacer(modifier = Modifier.weight(1f))
+                Text(
+                    text = "Carrito",
+                    style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                    modifier = Modifier.weight(8f),
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.weight(1f))
             }
         }
-        Surface(shadowElevation = 8.dp, modifier = Modifier.fillMaxWidth()) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(text = "Total:", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
-                    Text(text = "$${total.toInt()} CLP", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .padding(innerPadding)
+                .padding(horizontal = 16.dp)
+                .verticalScroll(rememberScrollState())
+        ) {
+            if (cartItems.isEmpty()) {
+                Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    Text("Tu carrito está vacío")
+                }
+            } else {
+                Text("Productos seleccionados:", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold))
+                Spacer(modifier = Modifier.height(8.dp))
+                cartItems.forEach { (product, qty) ->
+                    Card(
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Image(
+                                painter = painterResource(id = com.sibelsama.lovelyy5.R.drawable.ic_launcher_background),
+                                contentDescription = product.name,
+                                modifier = Modifier.size(48.dp).clip(RoundedCornerShape(8.dp))
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(product.name, style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold))
+                                Text(product.description, style = MaterialTheme.typography.bodySmall)
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                IconButton(onClick = { if (qty > 1) cartViewModel.updateQuantity(product, qty - 1) else cartViewModel.removeFromCart(product) }) {
+                                    Icon(Icons.Default.Remove, contentDescription = "Quitar uno")
+                                }
+                                Text(qty.toString(), style = MaterialTheme.typography.bodyLarge)
+                                IconButton(onClick = { cartViewModel.updateQuantity(product, qty + 1) }) {
+                                    Icon(Icons.Default.Add, contentDescription = "Añadir uno")
+                                }
+                            }
+                        }
+                    }
                 }
                 Spacer(modifier = Modifier.height(16.dp))
-                Button(
-                    onClick = onCheckoutClick,
-                    modifier = Modifier.fillMaxWidth().height(48.dp),
-                    enabled = cartItems.isNotEmpty()
+                Divider()
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("Proceder al Pago")
+                    Text("Subtotal:", style = MaterialTheme.typography.bodyMedium)
+                    Text("$${subtotal.toInt()} CLP", style = MaterialTheme.typography.bodyMedium)
                 }
             }
+
+            Spacer(modifier = Modifier.height(32.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Button(
+                    onClick = {
+                        val vibrator = context.getSystemService(android.content.Context.VIBRATOR_SERVICE) as? Vibrator
+                        vibrator?.let {
+                            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                                it.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.EFFECT_TICK))
+                            } else {
+                                @Suppress("DEPRECATION")
+                                it.vibrate(50)
+                            }
+                        }
+                        onClearCart()
+                    },
+                    modifier = Modifier.weight(1f).height(56.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Vaciar carrito", style = MaterialTheme.typography.titleMedium)
+                }
+                Button(
+                    onClick = {
+                        val vibrator = context.getSystemService(android.content.Context.VIBRATOR_SERVICE) as? Vibrator
+                        vibrator?.let {
+                            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                                it.vibrate(VibrationEffect.createOneShot(2000, VibrationEffect.DEFAULT_AMPLITUDE))
+                            } else {
+                                @Suppress("DEPRECATION")
+                                it.vibrate(2000)
+                            }
+                        }
+                        onConfirmProducts()
+                    },
+                    modifier = Modifier.weight(1f).height(56.dp),
+                    enabled = cartItems.isNotEmpty(),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                ) {
+                    Text("Confirmar productos", style = MaterialTheme.typography.titleMedium)
+                }
+            }
+            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }

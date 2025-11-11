@@ -108,7 +108,7 @@ fun HomeScreen(
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+                text = "La visión de Lovely Y5 es consolidarse como un referente confiable y accesible en el mundo de la tecnología, trascendiendo sus orígenes como un proyecto académico de Ingeniería Informática del DUOC UC. Nuestro propósito es doble: primero, ofrecer un servicio técnico excepcional y una cuidada selección de productos tecnológicos, garantizando calidad, transparencia y confianza a cada cliente. Segundo, materializar la aspiración de un modelo de negocio independiente, moderno y sostenible, que demuestre la viabilidad del trabajo remoto y la autonomía profesional. Lovely Y5 no es solo venta y reparación; es la aplicación práctica del conocimiento, la pasión por la innovación y el compromiso de construir una solución real para las necesidades digitales de hoy.",
                 style = MaterialTheme.typography.bodyMedium
             )
         }

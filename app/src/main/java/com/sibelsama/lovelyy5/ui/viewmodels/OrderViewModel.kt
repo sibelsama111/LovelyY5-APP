@@ -1,31 +1,49 @@
 package com.sibelsama.lovelyy5.ui.viewmodels
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
 import com.sibelsama.lovelyy5.model.Order
 import com.sibelsama.lovelyy5.model.Product
 import com.sibelsama.lovelyy5.model.ShippingDetails
-import kotlinx.coroutines.flow.MutableStateFlow
+import com.sibelsama.lovelyy5.repository.OrderRepository
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import java.util.UUID
 
-class OrderViewModel : ViewModel() {
+class OrderViewModel(application: Application) : AndroidViewModel(application) {
+    private val repository = OrderRepository(application.applicationContext)
+    val orders: StateFlow<List<Order>> = repository.getOrders().stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000L),
+        initialValue = emptyList()
+    )
 
-    private val _orders = MutableStateFlow<List<Order>>(emptyList())
-    val orders: StateFlow<List<Order>> = _orders.asStateFlow()
-
-    fun createOrder(cartItems: Map<Product, Int>, shippingDetails: ShippingDetails) {
-        val orderId = UUID.randomUUID().toString()
+    fun createOrder(cartItems: Map<Product, Int>, shippingDetails: ShippingDetails, shippingFee: Double = 5000.0) {
+        val orderId = UUID.randomUUID().toString().take(6)
+        val subtotal = cartItems.entries.sumOf { (product, quantity) -> product.price * quantity }
         val newOrder = Order(
-            id = orderId,
+            id = "#${orderId}",
             items = cartItems,
             shippingDetails = shippingDetails,
-            totalAmount = cartItems.entries.sumOf { (product, quantity) -> product.price * quantity }
+            subtotal = subtotal,
+            shippingCost = shippingFee,
+            total = subtotal + shippingFee
         )
-        _orders.value = _orders.value + newOrder
+        viewModelScope.launch {
+            repository.saveOrder(newOrder)
+        }
     }
 
-    fun getOrderById(orderId: String): Order? {
-        return _orders.value.find { it.id == orderId }
+    fun clearOrders() {
+        viewModelScope.launch {
+            repository.clearOrders()
+        }
+    }
+
+    suspend fun getOrderById(orderId: String): Order? {
+        return repository.getOrderById(orderId)
     }
 }
