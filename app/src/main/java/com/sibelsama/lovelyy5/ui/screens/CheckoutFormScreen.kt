@@ -30,7 +30,7 @@ import com.sibelsama.lovelyy5.ui.theme.LovelyY5APPTheme
 
 // Basic validation functions
 fun validateRut(rut: String): Boolean {
-    val regex = Regex("^([0-9]{1,2}\\\.?[0-9]{3}\\\.?[0-9]{3}-?[0-9kK])\$")
+    val regex = Regex("""^([0-9]{1,2}\.?[0-9]{3}\.?[0-9]{3}-?[0-9kK])$""")
     return regex.matches(rut)
 }
 

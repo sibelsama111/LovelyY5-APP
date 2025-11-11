@@ -9,6 +9,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.sibelsama.lovelyy5.model.Order
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -50,15 +51,17 @@ class OrderRepository(private val context: Context) {
     }
 
     suspend fun getOrderById(id: String): Order? {
-        val orders = context.dataStore.data.map { prefs ->
-            prefs[ORDERS_KEY]?.let {
-                try {
-                    Json.decodeFromString<List<Order>>(it)
-                } catch (e: Exception) {
-                    emptyList()
-                }
-            } ?: emptyList()
-        }
-        return orders.map { list -> list.find { it.id == id } }.firstOrNull()
+        return context.dataStore.data
+            .map { prefs ->
+                prefs[ORDERS_KEY]?.let {
+                    try {
+                        Json.decodeFromString<List<Order>>(it)
+                    } catch (e: Exception) {
+                        emptyList()
+                    }
+                } ?: emptyList()
+            }
+            .map { list -> list.find { it.id == id } }
+            .firstOrNull()
     }
 }

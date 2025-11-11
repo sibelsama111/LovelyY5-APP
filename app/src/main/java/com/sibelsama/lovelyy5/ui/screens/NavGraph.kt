@@ -1,111 +1,56 @@
 package com.sibelsama.lovelyy5.ui.screens
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.sibelsama.lovelyy5.model.Order
-import com.sibelsama.lovelyy5.model.ShippingDetails
-import com.sibelsama.lovelyy5.ui.components.AppHeader
 import com.sibelsama.lovelyy5.ui.theme.LovelyY5APPTheme
 import com.sibelsama.lovelyy5.ui.viewmodels.CartViewModel
-import com.sibelsama.lovelyy5.ui.viewmodels.OrderViewModel
+import com.sibelsama.lovelyy5.ui.viewmodels.ReviewViewModel
 
 sealed class Screen {
     object Home : Screen()
     object Products : Screen()
+    data class ProductDetail(val productId: Int) : Screen()
     object Cart : Screen()
-    object ShippingForm : Screen()
-    object Checkout : Screen()
-    object OrderList : Screen()
-    data class OrderDetail(val orderId: String) : Screen()
 }
 
 @Composable
 fun NavGraph(
     cartViewModel: CartViewModel = viewModel(),
-    orderViewModel: OrderViewModel = viewModel()
+    reviewViewModel: ReviewViewModel = viewModel()
 ) {
     var currentScreen by remember { mutableStateOf<Screen>(Screen.Home) }
-    val orders by orderViewModel.orders.collectAsState()
     val cartItems by cartViewModel.cartItems.collectAsState()
-    var pendingShippingDetails by remember { mutableStateOf<com.sibelsama.lovelyy5.model.ShippingDetails?>(null) }
 
     when (val screen = currentScreen) {
         is Screen.Home -> HomeScreen(
-            onProductClick = { _ -> currentScreen = Screen.Products },
+            onProductClick = { product -> currentScreen = Screen.ProductDetail(product.id) },
             onCartClick = { currentScreen = Screen.Cart },
-            onOrdersClick = { currentScreen = Screen.OrderList },
+            onOrdersClick = { /* orders removed in simplified app */ },
             cartViewModel = cartViewModel
         )
         is Screen.Products -> ProductListScreen(
-            onProductClick = { _ -> /* TODO: Implement product detail screen navigation */ },
+            onProductClick = { product -> currentScreen = Screen.ProductDetail(product.id) },
             onCartClick = { currentScreen = Screen.Cart },
             cartViewModel = cartViewModel
         )
+        is Screen.ProductDetail -> {
+            // Use a small local sample catalog for previews/navigation
+            val sampleProducts = listOf(
+                com.sibelsama.lovelyy5.model.Product(1, "iPhone 13 mini", "iPhone 13 mini", 130000.0),
+                com.sibelsama.lovelyy5.model.Product(2, "iPhone 13", "iPhone 13", 180000.0)
+            )
+            val product = sampleProducts.find { it.id == screen.productId }
+            if (product != null) {
+                ProductDetailScreen(product = product, reviewViewModel = reviewViewModel, onAddToCart = { cartViewModel.addToCart(product) })
+            } else {
+                Text("Producto no encontrado")
+            }
+        }
         is Screen.Cart -> CartScreen(
-            onConfirmProducts = { currentScreen = Screen.ShippingForm },
+            onConfirmProducts = { cartViewModel.clearCart() },
             onClearCart = { cartViewModel.clearCart() },
             cartViewModel = cartViewModel
         )
-        is Screen.ShippingForm -> ShippingFormScreen(
-            onSubmit = { shippingDetails ->
-                pendingShippingDetails = shippingDetails
-                currentScreen = Screen.Checkout
-            },
-            onCancel = { currentScreen = Screen.Cart }
-        )
-        is Screen.Checkout -> {
-            val sd = pendingShippingDetails
-            if (sd != null) {
-                CheckoutFormScreen(
-                    shippingDetails = sd,
-                    products = cartItems.entries.map { it.key to it.value },
-                    onConfirm = {
-                        orderViewModel.createOrder(cartItems, sd)
-                        pendingShippingDetails = null
-                        cartViewModel.clearCart()
-                        currentScreen = Screen.OrderList
-                    }
-                )
-            } else {
-                // no shipping details: go back to shipping form
-                currentScreen = Screen.ShippingForm
-            }
-        }
-        is Screen.OrderList -> OrderListScreen(
-            orders = orders,
-            onOrderClick = { orderId ->
-                currentScreen = Screen.OrderDetail(orderId)
-            }
-        )
-        is Screen.OrderDetail -> {
-            var order by remember { mutableStateOf<com.sibelsama.lovelyy5.model.Order?>(null) }
-            LaunchedEffect(screen.orderId) {
-                order = orderViewModel.getOrderById(screen.orderId)
-            }
-            if (order != null) {
-                OrderDetailScreen(order = order!!)
-            } else {
-                Text("Pedido no encontrado")
-            }
-        }
     }
 }
 @Preview(showBackground = true)

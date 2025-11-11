@@ -14,6 +14,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sibelsama.lovelyy5.R
 import com.sibelsama.lovelyy5.model.Product
@@ -212,6 +213,6 @@ fun CartItem(
 @Composable
 fun CartScreenPreview() {
     LovelyY5APPTheme {
-        CartScreen(onCheckoutClick = {})
+        CartScreen(onConfirmProducts = {}, onClearCart = {})
     }
 }

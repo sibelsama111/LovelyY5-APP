@@ -40,7 +40,8 @@ fun ShippingFormScreen(
     val context = LocalContext.current
 
     fun validateRut(rut: String): Boolean {
-        val regex = Regex("^\d{1,2}\.\d{3}\.\d{3}-[\dkK]")
+        // Usar raw string para la expresión regular y evitar escapes confusos
+        val regex = Regex("""^\d{1,2}\.\d{3}\.\d{3}-[\dkK]$""")
         if (!regex.matches(rut)) return false
         // Validación de dígito verificador
         val parts = rut.split("-")
@@ -58,7 +59,7 @@ fun ShippingFormScreen(
     }
 
     fun validatePhone(phone: String): Boolean {
-        val regex = Regex("^\+56\d{9}")
+        val regex = Regex("^\\+56\\d{9}$")
         return regex.matches(phone)
     }
 

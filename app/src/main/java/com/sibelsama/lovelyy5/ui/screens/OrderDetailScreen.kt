@@ -45,8 +45,8 @@ fun OrderDetailScreen(order: Order) {
             Spacer(modifier = Modifier.height(8.dp))
         }
 
-        items(order.items.entries.toList()) { (product, quantity) ->
-            ProductDetailRow(product = product, quantity = quantity)
+        items(order.items.entries.toList()) { (productId, quantity) ->
+            ProductDetailRow(productId = productId, quantity = quantity)
         }
 
         item {
@@ -73,11 +73,12 @@ fun ShippingDetailsCard(shippingDetails: ShippingDetails) {
 }
 
 @Composable
-fun ProductDetailRow(product: Product, quantity: Int) {
+fun ProductDetailRow(productId: Int, quantity: Int) {
     Row(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-        Text(text = "${product.name}", modifier = Modifier.weight(1f))
+        Text(text = "Producto #$productId", modifier = Modifier.weight(1f))
         Text(text = "x$quantity", modifier = Modifier.padding(horizontal = 16.dp))
-        Text(text = "$${(product.price * quantity).toInt()} CLP")
+        // Precio no disponible aquí sin catálogo; mostrar placeholder
+        Text(text = "Precio: -")
     }
 }
 
@@ -109,10 +110,7 @@ fun OrderDetailScreenPreview() {
     val dummyOrder = Order(
         id = "00001",
         shippingDetails = ShippingDetails("12.345.678-9", "Gino", "Sama", "+56912345678", "gino@sama.com", "Calle Falsa 123", "RM - Región Metropolitana"),
-        items = mapOf(
-            Product(1, "iPhone 13 mini", "", 130000.0) to 2,
-            Product(2, "Honor K50 Gaming", "", 250000.0) to 1
-        ),
+        items = mapOf(1 to 2, 2 to 1),
         subtotal = 510000.0,
         shippingCost = 5000.0,
         total = 515000.0

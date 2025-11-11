@@ -26,7 +26,8 @@ class OrderViewModel(application: Application) : AndroidViewModel(application) {
         val subtotal = cartItems.entries.sumOf { (product, quantity) -> product.price * quantity }
         val newOrder = Order(
             id = "#${orderId}",
-            items = cartItems,
+            // Convert items to Map<productId, quantity> to match Order model
+            items = cartItems.mapKeys { it.key.id },
             shippingDetails = shippingDetails,
             subtotal = subtotal,
             shippingCost = shippingFee,

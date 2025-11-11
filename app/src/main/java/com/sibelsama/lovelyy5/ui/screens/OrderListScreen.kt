@@ -73,7 +73,8 @@ fun OrderListScreenPreview() {
         Order(
             id = "00001",
             shippingDetails = ShippingDetails("12.345.678-9", "Gino", "Sama", "+56912345678", "gino@sama.com", "Calle Falsa 123", "RM - Región Metropolitana"),
-            items = mapOf(Product(1, "iPhone 13 mini", "", 130000.0) to 3),
+            // items: Map<productId, quantity>
+            items = mapOf(1 to 3),
             subtotal = 390000.0,
             shippingCost = 5000.0,
             total = 395000.0
