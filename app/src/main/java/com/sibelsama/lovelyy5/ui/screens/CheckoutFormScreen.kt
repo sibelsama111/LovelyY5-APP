@@ -1,1 +1,131 @@
-package com.sibelsama.lovelyy5.ui.screens\n\nimport androidx.compose.foundation.layout.*\nimport androidx.compose.foundation.rememberScrollState\nimport androidx.compose.foundation.text.KeyboardOptions\nimport androidx.compose.foundation.verticalScroll\nimport androidx.compose.material3.*\nimport androidx.compose.runtime.*\nimport androidx.compose.ui.Modifier\nimport androidx.compose.ui.text.input.KeyboardType\nimport androidx.compose.ui.text.font.FontWeight\nimport androidx.compose.ui.tooling.preview.Preview\nimport androidx.compose.ui.unit.dp\nimport com.sibelsama.lovelyy5.ui.theme.LovelyY5APPTheme\n\n// Basic validation functions\nfun validateRut(rut: String): Boolean {\n    val regex = Regex(\"^([0-9]{1,2}\\\\.?[0-9]{3}\\\\.?[0-9]{3}-?[0-9kK])\$\")\n    return regex.matches(rut)\n}\n\nfun validatePhone(phone: String): Boolean {\n    return phone.startsWith(\"+56\") && phone.length == 12 && phone.substring(3).all { it.isDigit() }\n}\n\nfun validateEmail(email: String): Boolean {\n    return \"@\" in email && \".\" in email\n}\n\n@OptIn(ExperimentalMaterial3Api::class)\n@Composable\nfun CheckoutFormScreen(onSubmit: () -> Unit) {\n    var rut by remember { mutableStateOf(\"\") }\n    var isRutError by remember { mutableStateOf(false) }\n    var names by remember { mutableStateOf(\"\") }\n    var lastNames by remember { mutableStateOf(\"\") }\n    var phone by remember { mutableStateOf(\"+56 \") }\n    var isPhoneError by remember { mutableStateOf(false) }\n    var email by remember { mutableStateOf(\"\") }\n    var isEmailError by remember { mutableStateOf(false) }\n    var address by remember { mutableStateOf(\"\") }\n    val regions = listOf(\n        \"I - Región de Tarapacá\", \"II - Región de Antofagasta\", \"III - Región de Atacama\",\n        \"IV - Región de Coquimbo\", \"V - Región de Valparaíso\", \"VI - Región de O'Higgins\",\n        \"VII - Región del Maule\", \"VIII - Región del Biobío\", \"IX - Región de La Araucanía\",\n        \"X - Región de Los Lagos\", \"XI - Región de Aysén\", \"XII - Región de Magallanes\",\n        \"RM - Región Metropolitana\", \"XIV - Región de Los Ríos\", \"XV - Región de Arica y Parinacota\",\n        \"XVI - Región de Ñuble\"\n    )\n    var selectedRegion by remember { mutableStateOf(regions[0]) }\n    var expanded by remember { mutableStateOf(false) }\n\n    fun validateFields(): Boolean {\n        isRutError = !validateRut(rut)\n        isPhoneError = !validatePhone(phone)\n        isEmailError = !validateEmail(email)\n        return !isRutError && !isPhoneError && !isEmailError && names.isNotBlank() && lastNames.isNotBlank() && address.isNotBlank()\n    }\n\n    Scaffold(\n        topBar = { AppHeader() },\n        content = {\n            Column(\n                modifier = Modifier\n                    .padding(it)\n                    .padding(16.dp)\n                    .verticalScroll(rememberScrollState())\n            ) {\n                Text(\"Formulario de Despacho\", style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold))\n                Spacer(modifier = Modifier.height(16.dp))\n\n                OutlinedTextField(value = rut, onValueChange = { rut = it }, label = { Text(\"RUT (XX.XXX.XXX-X)\") }, isError = isRutError, modifier = Modifier.fillMaxWidth())\n                OutlinedTextField(value = names, onValueChange = { names = it }, label = { Text(\"Nombres\") }, modifier = Modifier.fillMaxWidth())\n                OutlinedTextField(value = lastNames, onValueChange = { lastNames = it }, label = { Text(\"Apellidos\") }, modifier = Modifier.fillMaxWidth())\n                OutlinedTextField(value = phone, onValueChange = { phone = it }, label = { Text(\"Teléfono (+56 X XXXX XXXX)\") }, isError = isPhoneError, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone), modifier = Modifier.fillMaxWidth())\n                OutlinedTextField(value = email, onValueChange = { email = it }, label = { Text(\"Correo Electrónico\") }, isError = isEmailError, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email), modifier = Modifier.fillMaxWidth())\n                OutlinedTextField(value = address, onValueChange = { address = it }, label = { Text(\"Dirección (calle #25, comuna)\") }, modifier = Modifier.fillMaxWidth())\n\n                Box {\n                    OutlinedTextField(\n                        value = selectedRegion,\n                        onValueChange = { },\n                        label = { Text(\"Región\") },\n                        readOnly = true,\n                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },\n                        modifier = Modifier.fillMaxWidth().clickable { expanded = true }\n                    )\n                    ExposedDropdownMenu(\n                        expanded = expanded,\n                        onDismissRequest = { expanded = false },\n                    ) {\n                        regions.forEach { region ->\n                            DropdownMenuItem(text = { Text(region) }, onClick = { selectedRegion = region; expanded = false })\n                        }\n                    }\n                }\n\n                Spacer(modifier = Modifier.height(24.dp))\n                Button(\n                    onClick = {\n                        if (validateFields()) {\n                            onSubmit()\n                        }\n                    },\n                    modifier = Modifier.fillMaxWidth().height(48.dp)\n                ) {\n                    Text(\"Confirmar Compra\")\n                }\n            }\n        }\n    )\n}\n\n@Preview(showBackground = true)\n@Composable\nfun CheckoutFormScreenPreview() {\n    LovelyY5APPTheme {\n        CheckoutFormScreen(onSubmit = {})\n    }\n}\n
+package com.sibelsama.lovelyy5.ui.screens
+
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import com.sibelsama.lovelyy5.model.ShippingDetails
+import com.sibelsama.lovelyy5.ui.components.AppHeader
+import com.sibelsama.lovelyy5.ui.theme.LovelyY5APPTheme
+
+// Basic validation functions
+fun validateRut(rut: String): Boolean {
+    val regex = Regex("^([0-9]{1,2}\\\.?[0-9]{3}\\\.?[0-9]{3}-?[0-9kK])\$")
+    return regex.matches(rut)
+}
+
+fun validatePhone(phone: String): Boolean {
+    return phone.startsWith("+56") && phone.length == 12 && phone.substring(3).all { it.isDigit() }
+}
+
+fun validateEmail(email: String): Boolean {
+    return "@" in email && "." in email
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CheckoutFormScreen(onSubmit: (ShippingDetails) -> Unit) {
+    var rut by remember { mutableStateOf("") }
+    var isRutError by remember { mutableStateOf(false) }
+    var names by remember { mutableStateOf("") }
+    var lastNames by remember { mutableStateOf("") }
+    var phone by remember { mutableStateOf("+56 ") }
+    var isPhoneError by remember { mutableStateOf(false) }
+    var email by remember { mutableStateOf("") }
+    var isEmailError by remember { mutableStateOf(false) }
+    var address by remember { mutableStateOf("") }
+    val regions = listOf(
+        "I - Región de Tarapacá", "II - Región de Antofagasta", "III - Región de Atacama",
+        "IV - Región de Coquimbo", "V - Región de Valparaíso", "VI - Región de O'Higgins",
+        "VII - Región del Maule", "VIII - Región del Biobío", "IX - Región de La Araucanía",
+        "X - Región de Los Lagos", "XI - Región de Aysén", "XII - Región de Magallanes",
+        "RM - Región Metropolitana", "XIV - Región de Los Ríos", "XV - Región de Arica y Parinacota",
+        "XVI - Región de Ñuble"
+    )
+    var selectedRegion by remember { mutableStateOf(regions[0]) }
+    var expanded by remember { mutableStateOf(false) }
+
+    fun validateFields(): Boolean {
+        isRutError = !validateRut(rut)
+        isPhoneError = !validatePhone(phone)
+        isEmailError = !validateEmail(email)
+        return !isRutError && !isPhoneError && !isEmailError && names.isNotBlank() && lastNames.isNotBlank() && address.isNotBlank()
+    }
+
+    Scaffold(
+        topBar = { AppHeader() },
+        content = {
+            Column(
+                modifier = Modifier
+                    .padding(it)
+                    .padding(16.dp)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                Text("Formulario de Despacho", style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold))
+                Spacer(modifier = Modifier.height(16.dp))
+
+                OutlinedTextField(value = rut, onValueChange = { rut = it }, label = { Text("RUT (XX.XXX.XXX-X)") }, isError = isRutError, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = names, onValueChange = { names = it }, label = { Text("Nombres") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = lastNames, onValueChange = { lastNames = it }, label = { Text("Apellidos") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = phone, onValueChange = { phone = it }, label = { Text("Teléfono (+56 X XXXX XXXX)") }, isError = isPhoneError, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone), modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = email, onValueChange = { email = it }, label = { Text("Correo Electrónico") }, isError = isEmailError, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email), modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = address, onValueChange = { address = it }, label = { Text("Dirección (calle #25, comuna)") }, modifier = Modifier.fillMaxWidth())
+
+                Box {
+                    OutlinedTextField(
+                        value = selectedRegion,
+                        onValueChange = { },
+                        label = { Text("Región") },
+                        readOnly = true,
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                        modifier = Modifier.fillMaxWidth().clickable { expanded = true }
+                    )
+                    ExposedDropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false },
+                    ) {
+                        regions.forEach { region ->
+                            DropdownMenuItem(text = { Text(region) }, onClick = { selectedRegion = region; expanded = false })
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+                Button(
+                    onClick = {
+                        if (validateFields()) {
+                            val shippingDetails = ShippingDetails(
+                                name = names,
+                                address = address,
+                                city = selectedRegion, // Assuming region is the city for simplicity
+                                postalCode = "", // TODO: Add postal code field
+                                email = email,
+                                phone = phone
+                            )
+                            onSubmit(shippingDetails)
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth().height(48.dp)
+                ) {
+                    Text("Confirmar Compra")
+                }
+            }
+        }
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+fun CheckoutFormScreenPreview() {
+    LovelyY5APPTheme {
+        CheckoutFormScreen(onSubmit = {})
+    }
+}

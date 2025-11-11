@@ -6,27 +6,37 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sibelsama.lovelyy5.model.Product
 import com.sibelsama.lovelyy5.ui.components.ProductCard
 import com.sibelsama.lovelyy5.ui.theme.LovelyY5APPTheme
-import com.sibelsama.lovelyy5.viewmodel.AppViewModel
+import com.sibelsama.lovelyy5.ui.viewmodels.CartViewModel
 
 @Composable
-fun ProductListScreen(onCartClick: () -> Unit, appViewModel: AppViewModel = viewModel()) {
+fun ProductListScreen(onProductClick: (Product) -> Unit, onCartClick: () -> Unit, cartViewModel: CartViewModel = viewModel()) {
+    val cartItems by cartViewModel.cartItems.collectAsState()
+    val sampleProducts = listOf(
+        Product(1, "iPhone 13 mini", "iPhone 13 mini", 130000.0),
+        Product(2, "Honor K50 Gaming", "Honor K50 Gaming", 250000.0),
+        Product(3, "iPhone 13", "iPhone 13", 130000.0)
+    )
+
     Column {
         LazyColumn(modifier = Modifier.weight(1f)) {
-            items(appViewModel.productList) { product ->
+            items(sampleProducts) { product ->
                 ProductCard(
                     product = product,
-                    onAddToCart = { appViewModel.cart.add(product) }
+                    onProductClick = onProductClick,
+                    onAddToCartClick = { cartViewModel.addToCart(product) }
                 )
             }
         }
         Button(onClick = onCartClick) {
-            Text("Ir al carrito (${appViewModel.cart.size})")
+            Text("Ir al carrito (${cartItems.size})")
         }
     }
 }
@@ -35,9 +45,6 @@ fun ProductListScreen(onCartClick: () -> Unit, appViewModel: AppViewModel = view
 @Composable
 fun ProductListScreenPreview() {
     LovelyY5APPTheme {
-        val appViewModel = AppViewModel()
-        appViewModel.productList.add(Product(1, "Product A", "Description A", 15.0))
-        appViewModel.productList.add(Product(2, "Product B", "Description B", 25.0))
-        ProductListScreen(onCartClick = {}, appViewModel = appViewModel)
+        ProductListScreen(onProductClick = {}, onCartClick = {})
     }
 }

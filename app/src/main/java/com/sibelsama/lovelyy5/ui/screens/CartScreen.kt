@@ -18,34 +18,16 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sibelsama.lovelyy5.R
 import com.sibelsama.lovelyy5.model.Product
-import com.sibelsama.lovelyy5.viewmodel.AppViewModel
 import com.sibelsama.lovelyy5.ui.theme.LovelyY5APPTheme
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-
-// This will be the reusable AppBar
-@Composable
-fun AppHeader(isHome: Boolean = false) {
-    Column(modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp)) {
-        Text(
-            text = "Lovely Y5 - App",
-            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold)
-        )
-        if (isHome) {
-            Text(
-                text = "Tecnología al alcance de tu bolsillo",
-                style = MaterialTheme.typography.bodyMedium
-            )
-        }
-    }
-}
-
+import com.sibelsama.lovelyy5.ui.viewmodels.CartViewModel
+import com.sibelsama.lovelyy5.ui.components.AppHeader
 
 @Composable
-fun CartScreen(onCheckoutClick: () -> Unit, appViewModel: AppViewModel) {
-    val cartItems by appViewModel.cart.collectAsState()
+fun CartScreen(onCheckoutClick: () -> Unit, cartViewModel: CartViewModel = viewModel()) {
+    val cartItems by cartViewModel.cartItems.collectAsState()
     val total = cartItems.entries.sumOf { (product, quantity) -> product.price * quantity }
 
     Column(modifier = Modifier.fillMaxSize()) {
@@ -71,9 +53,9 @@ fun CartScreen(onCheckoutClick: () -> Unit, appViewModel: AppViewModel) {
                         product = product,
                         quantity = quantity,
                         onQuantityChange = { newQuantity ->
-                            appViewModel.updateQuantity(product, newQuantity)
+                            cartViewModel.updateQuantity(product, newQuantity)
                         },
-                        onRemove = { appViewModel.removeFromCart(product) }
+                        onRemove = { cartViewModel.removeFromCart(product) }
                     )
                 }
             }
@@ -149,23 +131,10 @@ fun CartItem(
     }
 }
 
-// Dummy ViewModel for preview
-open class PreviewAppViewModel : AppViewModel() {
-    private val _cart = MutableStateFlow<Map<Product, Int>>(emptyMap())
-    override val cart: StateFlow<Map<Product, Int>> = _cart
-
-    init {
-        val p1 = Product(1, "Zapatillas Deportivas", "desc", 45990.0)
-        val p2 = Product(2, "Polera Básica", "desc", 12990.0)
-        _cart.value = mapOf(p1 to 1, p2 to 2)
-    }
-}
-
-
 @Preview(showBackground = true)
 @Composable
 fun CartScreenPreview() {
     LovelyY5APPTheme {
-        CartScreen(onCheckoutClick = {}, appViewModel = PreviewAppViewModel())
+        CartScreen(onCheckoutClick = {})
     }
 }

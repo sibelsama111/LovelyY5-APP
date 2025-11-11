@@ -1,10 +1,5 @@
 package com.sibelsama.lovelyy5.ui.screens
 
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,9 +15,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Computer
@@ -39,23 +33,25 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.sibelsama.lovelyy5.R
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sibelsama.lovelyy5.model.Product
+import com.sibelsama.lovelyy5.ui.components.AppHeader
+import com.sibelsama.lovelyy5.ui.components.ProductCard
+import com.sibelsama.lovelyy5.ui.viewmodels.CartViewModel
 
 @Composable
-fun HomeScreen(onProductClick: (Product) -> Unit, onCartClick: () -> Unit, onOrdersClick: () -> Unit) {
+fun HomeScreen(
+    onProductClick: (Product) -> Unit, 
+    onCartClick: () -> Unit, 
+    onOrdersClick: () -> Unit,
+    cartViewModel: CartViewModel = viewModel()
+) {
     val sampleProducts = listOf(
         Product(1, "iPhone 13 mini", "iPhone 13 mini", 130000.0),
         Product(2, "Honor K50 Gaming", "Honor K50 Gaming", 250000.0),
@@ -102,7 +98,7 @@ fun HomeScreen(onProductClick: (Product) -> Unit, onCartClick: () -> Unit, onOrd
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 items(sampleProducts) { product ->
-                    ProductCard(product = product, onProductClick = onProductClick)
+                    ProductCard(product = product, onProductClick = onProductClick, onAddToCartClick = { cartViewModel.addToCart(product) })
                 }
             }
             Spacer(modifier = Modifier.height(24.dp))
@@ -171,53 +167,6 @@ fun CategoryItem(category: Category) {
 }
 
 data class Category(val name: String, val icon: ImageVector)
-
-@Composable
-fun ProductCard(product: Product, onProductClick: (Product) -> Unit) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(if (isPressed) 0.95f else 1f, label = "")
-
-    Card(
-        shape = RoundedCornerShape(12.dp),
-        modifier = Modifier
-            .width(200.dp)
-            .scale(scale)
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null
-            ) { onProductClick(product) }
-    ) {
-        Column {
-            Image(
-                painter = painterResource(id = R.drawable.ic_launcher_background), // Reemplazar con la imagen del producto
-                contentDescription = product.name,
-                modifier = Modifier
-                    .height(120.dp)
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)),
-                contentScale = ContentScale.Crop
-            )
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text(
-                    text = product.name,
-                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
-                )
-                Text(
-                    text = "$${product.price.toInt()} CLP",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Button(
-                    onClick = { /* TODO: Add to cart */ },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(text = "Añadir al carrito")
-                }
-            }
-        }
-    }
-}
 
 @Preview(showBackground = true)
 @Composable
