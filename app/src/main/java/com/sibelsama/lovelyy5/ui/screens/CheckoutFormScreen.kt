@@ -1,6 +1,6 @@
 package com.sibelsama.lovelyy5.ui.screens
 
-import androidx.compose.foundation.Image
+import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -8,7 +8,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -17,31 +17,29 @@ import android.os.VibrationEffect
 import android.os.Vibrator
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.sibelsama.lovelyy5.model.Order
 import com.sibelsama.lovelyy5.model.Product
 import com.sibelsama.lovelyy5.model.ShippingDetails
-import com.sibelsama.lovelyy5.ui.components.AppHeader
 import com.sibelsama.lovelyy5.ui.theme.LovelyY5APPTheme
 
 // Basic validation functions
-fun validateRut(rut: String): Boolean {
+private fun validateRut(rut: String): Boolean {
     val regex = Regex("""^([0-9]{1,2}\.?[0-9]{3}\.?[0-9]{3}-?[0-9kK])$""")
     return regex.matches(rut)
 }
 
-fun validatePhone(phone: String): Boolean {
+private fun validatePhone(phone: String): Boolean {
     return phone.startsWith("+56") && phone.length == 12 && phone.substring(3).all { it.isDigit() }
 }
 
-fun validateEmail(email: String): Boolean {
+private fun validateEmail(email: String): Boolean {
     return "@" in email && "." in email
 }
 
+@SuppressLint("MissingPermission")
 @Composable
 fun CheckoutFormScreen(
     shippingDetails: ShippingDetails = ShippingDetails(
@@ -95,20 +93,18 @@ fun CheckoutFormScreen(
             ) {
                 // ...existing code...
                 Spacer(modifier = Modifier.height(24.dp))
+                // Mostrar resumen de shipping y totales para usar las variables y eliminar advertencias
+                Text("Envío a: ${shippingDetails.names} - ${shippingDetails.address}", style = MaterialTheme.typography.bodySmall)
+                Spacer(modifier = Modifier.height(8.dp))
+                Text("Total a pagar: $${total.toInt()} CLP", style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold))
+                Spacer(modifier = Modifier.height(8.dp))
                 Button(
                     onClick = {
                         showConfirmation = true
                         onConfirm()
                         // Vibración al confirmar
-                        val vibrator = context.getSystemService(android.content.Context.VIBRATOR_SERVICE) as? Vibrator
-                        vibrator?.let {
-                            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                                it.vibrate(VibrationEffect.createOneShot(200, VibrationEffect.DEFAULT_AMPLITUDE))
-                            } else {
-                                @Suppress("DEPRECATION")
-                                it.vibrate(200)
-                            }
-                        }
+                        val vibrator = context.getSystemService(Vibrator::class.java)
+                        vibrator?.vibrate(VibrationEffect.createOneShot(200, VibrationEffect.DEFAULT_AMPLITUDE))
                     },
                     modifier = Modifier.fillMaxWidth().height(48.dp),
                     shape = RoundedCornerShape(24.dp)

@@ -1,9 +1,11 @@
 package com.sibelsama.lovelyy5.ui.screens
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.shape.*
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -23,9 +25,9 @@ import androidx.compose.ui.platform.LocalContext
 import android.os.VibrationEffect
 import android.os.Vibrator
 import com.sibelsama.lovelyy5.ui.viewmodels.CartViewModel
-import com.sibelsama.lovelyy5.ui.components.AppHeader
 
 @Composable
+@SuppressLint("MissingPermission")
 fun CartScreen(
     onConfirmProducts: () -> Unit,
     onClearCart: () -> Unit,
@@ -43,7 +45,8 @@ fun CartScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = { /* TODO: back navigation */ }) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
+                    @Suppress("DEPRECATION")
+                    Icon(Icons.Filled.ArrowBack, contentDescription = "Volver")
                 }
                 Spacer(modifier = Modifier.weight(1f))
                 Text(
@@ -80,7 +83,7 @@ fun CartScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Image(
-                                painter = painterResource(id = com.sibelsama.lovelyy5.R.drawable.ic_launcher_background),
+                                painter = painterResource(id = R.drawable.ic_launcher_background),
                                 contentDescription = product.name,
                                 modifier = Modifier.size(48.dp).clip(RoundedCornerShape(8.dp))
                             )
@@ -102,7 +105,7 @@ fun CartScreen(
                     }
                 }
                 Spacer(modifier = Modifier.height(16.dp))
-                Divider()
+                HorizontalDivider()
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -120,14 +123,9 @@ fun CartScreen(
             ) {
                 Button(
                     onClick = {
-                        val vibrator = context.getSystemService(android.content.Context.VIBRATOR_SERVICE) as? Vibrator
-                        vibrator?.let {
-                            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                                it.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.EFFECT_TICK))
-                            } else {
-                                @Suppress("DEPRECATION")
-                                it.vibrate(50)
-                            }
+                        val vibrator = context.getSystemService(Vibrator::class.java)
+                        if (vibrator != null) {
+                            vibrator.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.EFFECT_TICK))
                         }
                         onClearCart()
                     },
@@ -138,14 +136,9 @@ fun CartScreen(
                 }
                 Button(
                     onClick = {
-                        val vibrator = context.getSystemService(android.content.Context.VIBRATOR_SERVICE) as? Vibrator
-                        vibrator?.let {
-                            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                                it.vibrate(VibrationEffect.createOneShot(2000, VibrationEffect.DEFAULT_AMPLITUDE))
-                            } else {
-                                @Suppress("DEPRECATION")
-                                it.vibrate(2000)
-                            }
+                        val vibrator = context.getSystemService(Vibrator::class.java)
+                        if (vibrator != null) {
+                            vibrator.vibrate(VibrationEffect.createOneShot(2000, VibrationEffect.DEFAULT_AMPLITUDE))
                         }
                         onConfirmProducts()
                     },
@@ -161,6 +154,7 @@ fun CartScreen(
     }
 }
 
+@Suppress("unused")
 @Composable
 fun CartItem(
     product: Product,

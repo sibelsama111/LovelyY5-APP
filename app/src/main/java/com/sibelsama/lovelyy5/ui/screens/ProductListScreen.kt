@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,11 +26,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sibelsama.lovelyy5.model.Product
-import com.sibelsama.lovelyy5.ui.components.ProductCard
+import com.sibelsama.lovelyy5.R
 import com.sibelsama.lovelyy5.ui.theme.LovelyY5APPTheme
 import com.sibelsama.lovelyy5.ui.viewmodels.CartViewModel
 
@@ -61,7 +61,8 @@ fun ProductListScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = { /* back navigation */ }) {
-                Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
+                @Suppress("DEPRECATION")
+                Icon(Icons.Filled.ArrowBack, contentDescription = "Volver")
             }
             Spacer(modifier = Modifier.width(8.dp))
             Text("Productos", style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold))
@@ -114,7 +115,7 @@ fun ProductListScreen(
                 ) {
                     Column(modifier = Modifier.padding(8.dp)) {
                         Image(
-                            painter = painterResource(id = com.sibelsama.lovelyy5.R.drawable.ic_launcher_background),
+                            painter = painterResource(id = R.drawable.ic_launcher_background),
                             contentDescription = product.name,
                             modifier = Modifier
                                 .height(100.dp)

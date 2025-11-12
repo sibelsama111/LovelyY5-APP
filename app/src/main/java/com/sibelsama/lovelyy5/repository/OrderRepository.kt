@@ -4,41 +4,41 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.preferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.sibelsama.lovelyy5.model.Order
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 class OrderRepository(private val context: Context) {
     companion object {
         private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "orders")
-        private val ORDERS_KEY = preferencesKey<String>("orders_list")
+        private val ORDERS_KEY = stringPreferencesKey("orders_list")
     }
 
     fun getOrders(): Flow<List<Order>> = context.dataStore.data.map { prefs ->
-        prefs[ORDERS_KEY]?.let {
+        val raw = prefs[ORDERS_KEY]
+        if (raw != null) {
             try {
-                Json.decodeFromString<List<Order>>(it)
-            } catch (e: Exception) {
+                Json.decodeFromString<List<Order>>(raw)
+            } catch (_: Exception) {
                 emptyList()
             }
-        } ?: emptyList()
+        } else emptyList()
     }
 
     suspend fun saveOrder(order: Order) {
         context.dataStore.edit { prefs ->
-            val current = prefs[ORDERS_KEY]?.let {
+            val currentRaw = prefs[ORDERS_KEY]
+            val current = if (currentRaw != null) {
                 try {
-                    Json.decodeFromString<List<Order>>(it)
-                } catch (e: Exception) {
+                    Json.decodeFromString<List<Order>>(currentRaw)
+                } catch (_: Exception) {
                     emptyList()
                 }
-            } ?: emptyList()
+            } else emptyList()
             val updated = current + order
             prefs[ORDERS_KEY] = Json.encodeToString(updated)
         }
@@ -53,13 +53,14 @@ class OrderRepository(private val context: Context) {
     suspend fun getOrderById(id: String): Order? {
         return context.dataStore.data
             .map { prefs ->
-                prefs[ORDERS_KEY]?.let {
+                val raw = prefs[ORDERS_KEY]
+                if (raw != null) {
                     try {
-                        Json.decodeFromString<List<Order>>(it)
-                    } catch (e: Exception) {
+                        Json.decodeFromString<List<Order>>(raw)
+                    } catch (_: Exception) {
                         emptyList()
                     }
-                } ?: emptyList()
+                } else emptyList()
             }
             .map { list -> list.find { it.id == id } }
             .firstOrNull()
