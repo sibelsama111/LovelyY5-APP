@@ -3,6 +3,8 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
+    // KAPT para Room
+    id("org.jetbrains.kotlin.kapt")
 }
 
 android {
@@ -56,6 +58,10 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
     // Coil for image loading in Compose
     implementation("io.coil-kt:coil-compose:2.7.0")
+    // Room
+    implementation("androidx.room:room-ktx:2.8.3")
+    implementation("androidx.room:room-runtime:2.8.3")
+    kapt("androidx.room:room-compiler:2.8.3")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

@@ -10,7 +10,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -29,40 +29,47 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sibelsama.lovelyy5.model.Product
+import com.sibelsama.lovelyy5.repository.ProductRepository
 import com.sibelsama.lovelyy5.R
 import com.sibelsama.lovelyy5.ui.theme.LovelyY5APPTheme
 import com.sibelsama.lovelyy5.ui.viewmodels.CartViewModel
+import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun ProductListScreen(
     onProductClick: (Product) -> Unit,
     onCartClick: () -> Unit,
+    onBack: () -> Unit = {},
+    initialQuery: String? = null,
     cartViewModel: CartViewModel = viewModel()
 ) {
     val cartItems by cartViewModel.cartItems.collectAsState()
-    val sampleProducts = listOf(
-        Product(1, "iPhone 13 mini", "iPhone 13 mini", 130000.0),
-        Product(2, "iPhone 13", "iPhone 13", 180000.0)
-    )
+    val context = LocalContext.current
+    val repo = remember { ProductRepository(context) }
+    val products by repo.getProducts().collectAsState(initial = emptyList())
 
-    var searchText by remember { mutableStateOf(TextFieldValue("")) }
+    var searchText by remember { mutableStateOf(TextFieldValue(initialQuery ?: "")) }
     var sortOrder by remember { mutableStateOf(true) } // true: menor a mayor, false: mayor a menor
 
-    val filteredProducts = sampleProducts
+    val baseFiltered = products
         .filter {
             it.name.contains(searchText.text, ignoreCase = true) ||
             it.description.contains(searchText.text, ignoreCase = true)
         }
         .sortedBy { if (sortOrder) it.price else -it.price }
+    // Si initialQuery se pasó como categoría, filtrar por category además
+    val filteredProducts = if (initialQuery != null && initialQuery.isNotBlank()) {
+        baseFiltered.filter { it.category.contains(initialQuery, ignoreCase = true) }
+    } else baseFiltered
 
     Column(modifier = Modifier.fillMaxSize().background(Color(0xFFF7F3F8))) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = { /* back navigation */ }) {
+            IconButton(onClick = { onBack() }) {
                 @Suppress("DEPRECATION")
-                Icon(Icons.Filled.ArrowBack, contentDescription = "Volver")
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
             }
             Spacer(modifier = Modifier.width(8.dp))
             Text("Productos", style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold))
@@ -152,6 +159,6 @@ fun ProductListScreen(
 @Composable
 fun ProductListScreenPreview() {
     LovelyY5APPTheme {
-        ProductListScreen(onProductClick = {}, onCartClick = {})
+        ProductListScreen(onProductClick = {}, onCartClick = {}, onBack = {})
     }
 }

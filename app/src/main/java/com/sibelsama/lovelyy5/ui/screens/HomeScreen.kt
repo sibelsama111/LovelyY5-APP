@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.clickable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Computer
@@ -50,6 +51,8 @@ fun HomeScreen(
     onProductClick: (Product) -> Unit, 
     onCartClick: () -> Unit, 
     onOrdersClick: () -> Unit,
+    onSeeAllProducts: () -> Unit,
+    onCategoryClick: (String) -> Unit,
     cartViewModel: CartViewModel = viewModel()
 ) {
     val sampleProducts = listOf(
@@ -82,17 +85,17 @@ fun HomeScreen(
                 }
             }
             Spacer(modifier = Modifier.height(16.dp))
-            SectionHeader(title = "Categorías")
+            SectionHeader(title = "Categorías", onClick = onSeeAllProducts)
             LazyRow(
                 contentPadding = PaddingValues(vertical = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 items(sampleCategories) { category ->
-                    CategoryItem(category)
+                    CategoryItem(category, onClick = { onCategoryClick(category.name) })
                 }
             }
             Spacer(modifier = Modifier.height(16.dp))
-            SectionHeader(title = "Productos destacados")
+            SectionHeader(title = "Productos destacados", onClick = onSeeAllProducts)
             LazyRow(
                 contentPadding = PaddingValues(vertical = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -126,9 +129,9 @@ fun HomeScreen(
 }
 
 @Composable
-fun SectionHeader(title: String) {
+fun SectionHeader(title: String, onClick: () -> Unit) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().clickable { onClick() },
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -144,8 +147,8 @@ fun SectionHeader(title: String) {
 }
 
 @Composable
-fun CategoryItem(category: Category) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+fun CategoryItem(category: Category, onClick: (String) -> Unit) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.clickable { onClick(category.name) }) {
         Card(
             shape = CircleShape,
             modifier = Modifier.size(80.dp),
@@ -171,5 +174,5 @@ data class Category(val name: String, val icon: ImageVector)
 @Preview(showBackground = true)
 @Composable
 fun HomeScreenPreview() {
-    HomeScreen(onProductClick = {}, onCartClick = {}, onOrdersClick = {})
+    HomeScreen(onProductClick = {}, onCartClick = {}, onOrdersClick = {}, onSeeAllProducts = {}, onCategoryClick = {})
 }

@@ -21,9 +21,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sibelsama.lovelyy5.R
 import com.sibelsama.lovelyy5.model.Product
 import com.sibelsama.lovelyy5.ui.theme.LovelyY5APPTheme
-import androidx.compose.ui.platform.LocalContext
-import android.os.VibrationEffect
-import android.os.Vibrator
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import com.sibelsama.lovelyy5.ui.viewmodels.CartViewModel
 
 @Composable
@@ -31,12 +30,13 @@ import com.sibelsama.lovelyy5.ui.viewmodels.CartViewModel
 fun CartScreen(
     onConfirmProducts: () -> Unit,
     onClearCart: () -> Unit,
+    onBack: () -> Unit = {},
     cartViewModel: CartViewModel = viewModel()
 ) {
     val cartItems by cartViewModel.cartItems.collectAsState()
     val subtotal = cartItems.entries.sumOf { (product, quantity) -> product.price * quantity }
 
-    val context = LocalContext.current
+    val haptic = LocalHapticFeedback.current
 
     Scaffold(
         topBar = {
@@ -44,7 +44,7 @@ fun CartScreen(
                 modifier = Modifier.fillMaxWidth().padding(top = 16.dp, start = 8.dp, end = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = { /* TODO: back navigation */ }) {
+                IconButton(onClick = { onBack() }) {
                     @Suppress("DEPRECATION")
                     Icon(Icons.Filled.ArrowBack, contentDescription = "Volver")
                 }
@@ -123,10 +123,7 @@ fun CartScreen(
             ) {
                 Button(
                     onClick = {
-                        val vibrator = context.getSystemService(Vibrator::class.java)
-                        if (vibrator != null) {
-                            vibrator.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.EFFECT_TICK))
-                        }
+                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                         onClearCart()
                     },
                     modifier = Modifier.weight(1f).height(56.dp),
@@ -136,10 +133,7 @@ fun CartScreen(
                 }
                 Button(
                     onClick = {
-                        val vibrator = context.getSystemService(Vibrator::class.java)
-                        if (vibrator != null) {
-                            vibrator.vibrate(VibrationEffect.createOneShot(2000, VibrationEffect.DEFAULT_AMPLITUDE))
-                        }
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         onConfirmProducts()
                     },
                     modifier = Modifier.weight(1f).height(56.dp),
@@ -207,6 +201,6 @@ fun CartItem(
 @Composable
 fun CartScreenPreview() {
     LovelyY5APPTheme {
-        CartScreen(onConfirmProducts = {}, onClearCart = {})
+        CartScreen(onConfirmProducts = {}, onClearCart = {}, onBack = {})
     }
 }

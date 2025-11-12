@@ -8,13 +8,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.platform.LocalContext
-import android.os.VibrationEffect
-import android.os.Vibrator
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
@@ -62,7 +61,7 @@ fun CheckoutFormScreen(
     val total = subtotal + shippingFee
 
     var showConfirmation by remember { mutableStateOf(false) }
-    val context = LocalContext.current
+    val haptic = LocalHapticFeedback.current
 
     Scaffold(
         topBar = {
@@ -70,8 +69,8 @@ fun CheckoutFormScreen(
                 modifier = Modifier.fillMaxWidth().padding(top = 16.dp, start = 8.dp, end = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = { /* TODO: back navigation */ }) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
+                IconButton(onClick = { /* back action could be provided via callback */ }) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
                 }
                 Spacer(modifier = Modifier.weight(1f))
                 Text(
@@ -102,9 +101,8 @@ fun CheckoutFormScreen(
                     onClick = {
                         showConfirmation = true
                         onConfirm()
-                        // Vibración al confirmar
-                        val vibrator = context.getSystemService(Vibrator::class.java)
-                        vibrator?.vibrate(VibrationEffect.createOneShot(200, VibrationEffect.DEFAULT_AMPLITUDE))
+                        // Haptic feedback en lugar de vibrator
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     },
                     modifier = Modifier.fillMaxWidth().height(48.dp),
                     shape = RoundedCornerShape(24.dp)
@@ -143,7 +141,7 @@ fun CheckoutFormScreen(
                                 modifier = Modifier.clickable {
                                     showConfirmation = false
                                     // Navegar a pantalla de pedidos
-                                    onConfirm() // Puedes usar un callback para cambiar de pantalla
+                                    onConfirm()
                                 }
                             )
                         }
@@ -158,6 +156,6 @@ fun CheckoutFormScreen(
 @Composable
 fun CheckoutFormScreenPreview() {
     LovelyY5APPTheme {
-        CheckoutFormScreen()
+        CheckoutFormScreen(onConfirm = {})
     }
 }
