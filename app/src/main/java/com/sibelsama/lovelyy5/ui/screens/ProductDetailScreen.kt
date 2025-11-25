@@ -5,12 +5,13 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import android.net.Uri
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import coil.compose.rememberAsyncImagePainter
 import androidx.compose.material3.*
@@ -28,6 +29,10 @@ import android.os.VibrationEffect
 import android.os.Vibrator
 import com.sibelsama.lovelyy5.model.ProductReview
 import com.sibelsama.lovelyy5.ui.viewmodels.ReviewViewModel
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.core.content.ContextCompat
+import android.widget.Toast
 
 @Composable
 fun ProductDetailScreen(
@@ -41,16 +46,28 @@ fun ProductDetailScreen(
     var rating by remember { mutableStateOf(1) }
     var images by remember { mutableStateOf(listOf<Uri>()) }
 
+    val context = LocalContext.current
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            // Permiso concedido, ahora intentar abrir la cámara
+            Toast.makeText(context, "Permiso de cámara concedido", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(context, "Permiso de cámara denegado", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
         bitmap?.let {
             // Guardar imagen en almacenamiento local si se requiere persistencia
+            Toast.makeText(context, "Imagen capturada exitosamente", Toast.LENGTH_SHORT).show()
         }
     }
     val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
         images = images + uris
     }
-
-    val context = LocalContext.current
 
     Column(modifier = Modifier.fillMaxSize().background(Color(0xFFF7F3F8))) {
         Row(
@@ -58,7 +75,7 @@ fun ProductDetailScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = { /* back navigation */ }) {
-                Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
             }
             Spacer(modifier = Modifier.width(8.dp))
             Text("Celulares", style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold))
@@ -100,7 +117,7 @@ fun ProductDetailScreen(
         Text("Especificaciones técnicas", style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold), modifier = Modifier.padding(horizontal = 16.dp))
         Text(product.description, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(horizontal = 16.dp))
         Spacer(modifier = Modifier.height(16.dp))
-        Divider()
+        HorizontalDivider()
         Spacer(modifier = Modifier.height(8.dp))
         Text("Deje su valoración", style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold), modifier = Modifier.padding(horizontal = 16.dp))
         OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Nombre") }, modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp))
@@ -116,7 +133,22 @@ fun ProductDetailScreen(
                         it.vibrate(50)
                     }
                 }
-                cameraLauncher.launch(null)
+
+                // Verificar permiso de cámara antes de intentar usarla
+                when (PackageManager.PERMISSION_GRANTED) {
+                    ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) -> {
+                        // Permiso ya concedido, abrir cámara
+                        try {
+                            cameraLauncher.launch(null)
+                        } catch (e: Exception) {
+                            Toast.makeText(context, "Error al abrir la cámara: ${e.message}", Toast.LENGTH_LONG).show()
+                        }
+                    }
+                    else -> {
+                        // Solicitar permiso
+                        permissionLauncher.launch(Manifest.permission.CAMERA)
+                    }
+                }
             }, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFB36AE2))) {
                 Text("Cámara", color = Color.White)
             }
@@ -204,7 +236,7 @@ fun ProductDetailScreen(
             Text("Valorar", color = Color.White)
         }
         Spacer(modifier = Modifier.height(16.dp))
-        Divider()
+        HorizontalDivider()
         Spacer(modifier = Modifier.height(8.dp))
         Text("Valoraciones", style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold), modifier = Modifier.padding(horizontal = 16.dp))
         reviews.forEach { review ->
