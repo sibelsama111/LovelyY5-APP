@@ -13,12 +13,18 @@ import kotlinx.coroutines.launch
 class ReviewViewModel(application: Application) : AndroidViewModel(application) {
     private val repository = ReviewRepository(application.applicationContext)
 
-    fun getReviews(productId: Int): StateFlow<List<ProductReview>> =
-        repository.getReviews(productId).stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000L),
-            initialValue = emptyList()
-        )
+    // Cachear StateFlows por productId para evitar crear uno nuevo en cada getReviews()
+    private val reviewFlows: MutableMap<Int, StateFlow<List<ProductReview>>> = mutableMapOf()
+
+    fun getReviews(productId: Int): StateFlow<List<ProductReview>> {
+        return reviewFlows.getOrPut(productId) {
+            repository.getReviews(productId).stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5000L),
+                initialValue = emptyList()
+            )
+        }
+    }
 
     fun saveReview(review: ProductReview) {
         viewModelScope.launch {
