@@ -39,7 +39,8 @@ fun NavGraph(
         is Screen.Products -> ProductListScreen(
             onProductClick = { product -> currentScreen = Screen.ProductDetail(product.id) },
             onCartClick = { currentScreen = Screen.Cart },
-            cartViewModel = cartVm
+            cartViewModel = cartVm,
+            onBackClick = { currentScreen = Screen.Home }
         )
         is Screen.ProductDetail -> {
             // Use a small local sample catalog for previews/navigation
@@ -49,7 +50,12 @@ fun NavGraph(
             )
             val product = sampleProducts.find { it.id == screen.productId }
             if (product != null) {
-                ProductDetailScreen(product = product, reviewViewModel = reviewVm, onAddToCart = { cartVm.addToCart(product) })
+                ProductDetailScreen(
+                    product = product,
+                    reviewViewModel = reviewVm,
+                    onAddToCart = { cartVm.addToCart(product) },
+                    onBackClick = { currentScreen = Screen.Home }
+                )
             } else {
                 Text("Producto no encontrado")
             }
@@ -57,6 +63,7 @@ fun NavGraph(
         is Screen.Cart -> CartScreen(
             onConfirmProducts = { cartVm.clearCart() },
             onClearCart = { cartVm.clearCart() },
+            onBackClick = { currentScreen = Screen.Home },
             cartViewModel = cartVm
         )
     }

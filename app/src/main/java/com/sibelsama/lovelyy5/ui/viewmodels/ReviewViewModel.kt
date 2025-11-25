@@ -22,7 +22,12 @@ class ReviewViewModel(application: Application) : AndroidViewModel(application) 
 
     fun saveReview(review: ProductReview) {
         viewModelScope.launch {
-            repository.saveReview(review)
+            try {
+                repository.saveReview(review)
+                android.util.Log.d("ReviewViewModel", "Review saved successfully")
+            } catch (e: Exception) {
+                android.util.Log.e("ReviewViewModel", "Error saving review", e)
+            }
         }
     }
 }

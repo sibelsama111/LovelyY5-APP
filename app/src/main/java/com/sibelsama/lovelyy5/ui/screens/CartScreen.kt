@@ -31,6 +31,7 @@ import com.sibelsama.lovelyy5.ui.viewmodels.CartViewModel
 fun CartScreen(
     onConfirmProducts: () -> Unit,
     onClearCart: () -> Unit,
+    onBackClick: () -> Unit = {},
     cartViewModel: CartViewModel = viewModel()
 ) {
     val cartItems by cartViewModel.cartItems.collectAsState()
@@ -44,7 +45,7 @@ fun CartScreen(
                 modifier = Modifier.fillMaxWidth().padding(top = 16.dp, start = 8.dp, end = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = { /* TODO: back navigation */ }) {
+                IconButton(onClick = onBackClick) {
                     @Suppress("DEPRECATION")
                     Icon(Icons.Filled.ArrowBack, contentDescription = "Volver")
                 }

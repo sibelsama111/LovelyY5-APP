@@ -37,7 +37,8 @@ import com.sibelsama.lovelyy5.ui.viewmodels.CartViewModel
 fun ProductListScreen(
     onProductClick: (Product) -> Unit,
     onCartClick: () -> Unit,
-    cartViewModel: CartViewModel = viewModel()
+    cartViewModel: CartViewModel = viewModel(),
+    onBackClick: () -> Unit = {}
 ) {
     val cartItems by cartViewModel.cartItems.collectAsState()
     val sampleProducts = listOf(
@@ -60,7 +61,7 @@ fun ProductListScreen(
             modifier = Modifier.fillMaxWidth().padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = { /* back navigation */ }) {
+            IconButton(onClick = onBackClick) {
                 @Suppress("DEPRECATION")
                 Icon(Icons.Filled.ArrowBack, contentDescription = "Volver")
             }

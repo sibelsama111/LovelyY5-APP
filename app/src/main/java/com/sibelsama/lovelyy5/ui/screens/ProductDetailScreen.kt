@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
@@ -20,8 +21,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.sibelsama.lovelyy5.model.Product
 import androidx.compose.ui.platform.LocalContext
@@ -33,48 +36,111 @@ import android.Manifest
 import android.content.pm.PackageManager
 import androidx.core.content.ContextCompat
 import android.widget.Toast
+import java.io.File
+import android.content.Context
+
 
 @Composable
 fun ProductDetailScreen(
     product: Product,
     reviewViewModel: ReviewViewModel,
-    onAddToCart: () -> Unit
+    onAddToCart: () -> Unit,
+    onBackClick: () -> Unit = {}
 ) {
-    val reviews by reviewViewModel.getReviews(product.id).collectAsState()
+    // Estado COMPLETAMENTE ESTÁTICO para valoraciones - no más reactivo
+    var reviews by remember { mutableStateOf(listOf<ProductReview>()) }
+    var reviewsLoaded by remember { mutableStateOf(false) }
+
     var name by remember { mutableStateOf("") }
     var comment by remember { mutableStateOf("") }
     var rating by remember { mutableStateOf(1) }
     var images by remember { mutableStateOf(listOf<Uri>()) }
 
+    // Cargar valoraciones UNA SOLA VEZ usando corrutina simple
+    LaunchedEffect(product.id) {
+        if (!reviewsLoaded) {
+            try {
+                // Obtener snapshot actual del estado sin suscribirse a cambios
+                val currentReviews = reviewViewModel.getReviews(product.id).value
+                reviews = currentReviews
+                reviewsLoaded = true
+                android.util.Log.d("ProductDetailScreen", "Reviews loaded once: ${currentReviews.size}")
+            } catch (e: Exception) {
+                android.util.Log.e("ProductDetailScreen", "Error loading reviews", e)
+                // Inicializar con lista vacía para evitar estados indefinidos
+                reviews = emptyList()
+                reviewsLoaded = true
+            }
+        }
+    }
+
     val context = LocalContext.current
 
-    val permissionLauncher = rememberLauncherForActivityResult(
+    // Valoraciones se cargan automáticamente desde DataStore
+
+    val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
+        bitmap?.let {
+            try {
+                // Convertir bitmap a URI temporal para mostrar en la UI
+                val internalDir = context.filesDir
+                val imageFile = File(internalDir, "temp_image_${System.currentTimeMillis()}.jpg")
+                val outputStream = imageFile.outputStream()
+                bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 85, outputStream)
+                outputStream.close()
+
+                val imageUri = Uri.fromFile(imageFile)
+                images = images + imageUri
+                Toast.makeText(context, "📷 Imagen agregada a la valoración", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                Toast.makeText(context, "Error al guardar imagen: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
+        images = images + uris
+        Toast.makeText(context, "🖼️ ${uris.size} imagen(es) agregada(s)", Toast.LENGTH_SHORT).show()
+    }
+
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
             // Permiso concedido, ahora intentar abrir la cámara
-            Toast.makeText(context, "Permiso de cámara concedido", Toast.LENGTH_SHORT).show()
+            try {
+                cameraLauncher.launch(null)
+            } catch (e: Exception) {
+                Toast.makeText(context, "Error al abrir la cámara: ${e.message}", Toast.LENGTH_LONG).show()
+            }
         } else {
             Toast.makeText(context, "Permiso de cámara denegado", Toast.LENGTH_SHORT).show()
         }
     }
 
-    val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
-        bitmap?.let {
-            // Guardar imagen en almacenamiento local si se requiere persistencia
-            Toast.makeText(context, "Imagen capturada exitosamente", Toast.LENGTH_SHORT).show()
+    val mediaPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            galleryLauncher.launch("image/*")
+        } else {
+            // Intentar con selector de archivos sin permisos específicos
+            galleryLauncher.launch("image/*")
         }
     }
-    val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
-        images = images + uris
-    }
 
-    Column(modifier = Modifier.fillMaxSize().background(Color(0xFFF7F3F8))) {
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFF7F3F8))
+            .verticalScroll(rememberScrollState())
+            .padding(bottom = 16.dp) // Espacio al final para mejor scroll
+    ) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = { /* back navigation */ }) {
+            IconButton(onClick = onBackClick) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
             }
             Spacer(modifier = Modifier.width(8.dp))
@@ -95,17 +161,10 @@ fun ProductDetailScreen(
             }
         }
         Spacer(modifier = Modifier.height(8.dp))
-        Button(
-            onClick = {
-                val vibrator = context.getSystemService(android.content.Context.VIBRATOR_SERVICE) as? Vibrator
-                vibrator?.let {
-                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                        it.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.EFFECT_TICK))
-                    } else {
-                        @Suppress("DEPRECATION")
-                        it.vibrate(50)
-                    }
-                }
+        Button(onClick = {
+                @Suppress("DEPRECATION")
+                val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
+                vibrator?.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.EFFECT_TICK))
                 onAddToCart()
             },
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
@@ -124,16 +183,6 @@ fun ProductDetailScreen(
         OutlinedTextField(value = comment, onValueChange = { comment = it }, label = { Text("Opinión del producto") }, modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp))
         Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Button(onClick = {
-                val vibrator = context.getSystemService(android.content.Context.VIBRATOR_SERVICE) as? Vibrator
-                vibrator?.let {
-                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                        it.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.EFFECT_TICK))
-                    } else {
-                        @Suppress("DEPRECATION")
-                        it.vibrate(50)
-                    }
-                }
-
                 // Verificar permiso de cámara antes de intentar usarla
                 when (PackageManager.PERMISSION_GRANTED) {
                     ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) -> {
@@ -146,48 +195,66 @@ fun ProductDetailScreen(
                     }
                     else -> {
                         // Solicitar permiso
-                        permissionLauncher.launch(Manifest.permission.CAMERA)
+                        cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
                     }
                 }
-            }, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFB36AE2))) {
-                Text("Cámara", color = Color.White)
+            }, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))) {
+                Text("📷 Cámara", color = Color.White)
             }
             Button(onClick = {
-                val vibrator = context.getSystemService(android.content.Context.VIBRATOR_SERVICE) as? Vibrator
-                vibrator?.let {
-                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                        it.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.EFFECT_TICK))
-                    } else {
-                        @Suppress("DEPRECATION")
-                        it.vibrate(50)
+                // En Android 13+ (API 33+), usar selector de medios visual
+                // En versiones anteriores, verificar permisos de almacenamiento
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                    // Android 13+ - usar selector de medios granular
+                    galleryLauncher.launch("image/*")
+                } else {
+                    // Android 12 y anteriores - verificar permisos de almacenamiento
+                    when (PackageManager.PERMISSION_GRANTED) {
+                        ContextCompat.checkSelfPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE) -> {
+                            galleryLauncher.launch("image/*")
+                        }
+                        else -> {
+                            mediaPermissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
+                        }
                     }
                 }
-                galleryLauncher.launch("image/*")
-            }, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFB36AE2))) {
-                Text("Galería", color = Color.White)
+            }, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2196F3))) {
+                Text("🖼️ Galería", color = Color.White)
             }
         }
         if (images.isNotEmpty()) {
-            Row(modifier = Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp)) {
+            Text(
+                text = "Imágenes seleccionadas (${images.size}):",
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+            )
+            Row(modifier = Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 8.dp)) {
                 images.forEach { uri ->
-                    Box(modifier = Modifier.padding(end = 8.dp)) {
-                        Image(painter = rememberAsyncImagePainter(uri), contentDescription = "Imagen valoración", modifier = Modifier.size(64.dp).clip(RoundedCornerShape(8.dp)))
+                    Box(modifier = Modifier.padding(end = 12.dp)) {
+                        Card(
+                            modifier = Modifier.size(80.dp),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                        ) {
+                            Image(
+                                painter = rememberAsyncImagePainter(uri),
+                                contentDescription = "Imagen para valoración",
+                                modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(8.dp)),
+                                contentScale = ContentScale.Crop
+                            )
+                        }
                         IconButton(
                             onClick = {
-                                val vibrator = context.getSystemService(android.content.Context.VIBRATOR_SERVICE) as? Vibrator
-                                vibrator?.let {
-                                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                                        it.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.EFFECT_TICK))
-                                    } else {
-                                        @Suppress("DEPRECATION")
-                                        it.vibrate(50)
-                                    }
-                                }
                                 images = images.filter { it != uri }
+                                Toast.makeText(context, "Imagen eliminada", Toast.LENGTH_SHORT).show()
                             },
                             modifier = Modifier.align(Alignment.TopEnd).size(24.dp)
                         ) {
-                            Icon(Icons.Default.Delete, contentDescription = "Eliminar imagen", tint = Color.Red)
+                            Icon(
+                                Icons.Default.Cancel,
+                                contentDescription = "Eliminar imagen",
+                                tint = Color.Red,
+                                modifier = Modifier.size(20.dp)
+                            )
                         }
                     }
                 }
@@ -205,62 +272,125 @@ fun ProductDetailScreen(
         }
         Button(
             onClick = {
-                val vibrator = context.getSystemService(android.content.Context.VIBRATOR_SERVICE) as? Vibrator
-                vibrator?.let {
-                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                        it.vibrate(VibrationEffect.createOneShot(2000, VibrationEffect.DEFAULT_AMPLITUDE))
-                    } else {
-                        @Suppress("DEPRECATION")
-                        it.vibrate(2000)
-                    }
-                }
+                @Suppress("DEPRECATION")
+                val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
+                vibrator?.vibrate(VibrationEffect.createOneShot(100, VibrationEffect.DEFAULT_AMPLITUDE))
+
                 if (name.isNotBlank() && comment.isNotBlank()) {
-                    reviewViewModel.saveReview(
-                        ProductReview(
-                            productId = product.id,
-                            name = name,
-                            comment = comment,
-                            rating = rating,
-                            imageUris = images.map { it.toString() }
-                        )
+                    val newReview = ProductReview(
+                        productId = product.id,
+                        name = name,
+                        comment = comment,
+                        rating = rating,
+                        imageUris = images.map { it.toString() }
                     )
+
+                    // Actualizar SOLO el estado estático local - no más reactividad
+                    reviews = reviews + newReview
+
+                    // Guardar en el repositorio
+                    reviewViewModel.saveReview(newReview)
+
+                    // Limpiar el formulario después de guardar
                     name = ""
                     comment = ""
                     rating = 1
                     images = emptyList()
+
+                    // Mostrar mensaje de confirmación
+                    Toast.makeText(context, "¡Valoración guardada exitosamente!", Toast.LENGTH_LONG).show()
+                } else {
+                    Toast.makeText(context, "Por favor complete el nombre y el comentario", Toast.LENGTH_SHORT).show()
                 }
             },
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFB36AE2))
         ) {
-            Text("Valorar", color = Color.White)
+            Text("Valorar Producto", color = Color.White)
         }
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(24.dp))
         HorizontalDivider()
+        Spacer(modifier = Modifier.height(16.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("Valoraciones", style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold))
+            Text("(${reviews.size})", style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
+        }
+
+        // Log de debug para verificar que no hay recomposiciones innecesarias
+        android.util.Log.d("ProductDetailScreen", "Rendering reviews section with ${reviews.size} reviews - Static: $reviewsLoaded")
         Spacer(modifier = Modifier.height(8.dp))
-        Text("Valoraciones", style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold), modifier = Modifier.padding(horizontal = 16.dp))
-        reviews.forEach { review ->
+
+        if (reviews.isEmpty()) {
             Card(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White)
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5))
             ) {
-                Row(modifier = Modifier.padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text(review.name, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    repeat(review.rating) {
-                        Icon(Icons.Default.Star, contentDescription = "Estrella", tint = Color(0xFFB36AE2))
-                    }
-                }
-                Text(review.comment, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(start = 8.dp, bottom = 8.dp))
-                if (review.imageUris.isNotEmpty()) {
-                    Row(modifier = Modifier.horizontalScroll(rememberScrollState()).padding(start = 8.dp, bottom = 8.dp)) {
-                        review.imageUris.forEach { uriStr ->
-                            val uri = android.net.Uri.parse(uriStr)
-                            Image(painter = rememberAsyncImagePainter(uri), contentDescription = "Imagen valoración", modifier = Modifier.size(64.dp).clip(RoundedCornerShape(8.dp)).padding(end = 8.dp))
+                Text(
+                    text = "Aún no hay valoraciones para este producto.\n¡Sé el primero en valorarlo!",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(16.dp),
+                    textAlign = TextAlign.Center
+                )
+            }
+        } else {
+            reviews.forEachIndexed { index, review ->
+                key("review_${review.productId}_${review.name}_${review.comment.hashCode()}_$index") {
+                    Card(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                    ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(review.name, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            repeat(review.rating) {
+                                Icon(Icons.Default.Star, contentDescription = "Estrella", tint = Color(0xFFFFD700), modifier = Modifier.size(16.dp))
+                            }
+                            repeat(5 - review.rating) {
+                                Icon(Icons.Default.Star, contentDescription = "Estrella vacía", tint = Color.LightGray, modifier = Modifier.size(16.dp))
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(review.comment, style = MaterialTheme.typography.bodySmall)
+
+                        if (review.imageUris.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "📷 ${review.imageUris.size} imagen(es)",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color.Gray
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Row(modifier = Modifier.horizontalScroll(rememberScrollState())) {
+                                review.imageUris.forEach { uriStr ->
+                                    Card(
+                                        modifier = Modifier
+                                            .size(100.dp)
+                                            .padding(end = 8.dp),
+                                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                                    ) {
+                                        Image(
+                                            painter = rememberAsyncImagePainter(uriStr),
+                                            contentDescription = "Imagen de valoración",
+                                            modifier = Modifier.fillMaxSize(),
+                                            contentScale = ContentScale.Crop
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
                 }
+                }
             }
         }
+
+        // Espacio final para que el usuario pueda hacer scroll más cómodamente
+        Spacer(modifier = Modifier.height(32.dp))
     }
 }

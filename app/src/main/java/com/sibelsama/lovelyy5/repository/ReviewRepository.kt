@@ -22,25 +22,46 @@ class ReviewRepository(private val context: Context) {
         val raw = prefs[REVIEWS_KEY]
         if (raw != null) {
             try {
-                Json.decodeFromString<List<ProductReview>>(raw).filter { r -> r.productId == productId }
-            } catch (_: Exception) {
+                val allReviews = Json.decodeFromString<List<ProductReview>>(raw)
+                val filteredReviews = allReviews.filter { r -> r.productId == productId }
+                android.util.Log.d("ReviewRepository", "Retrieved ${filteredReviews.size} reviews for product $productId")
+                filteredReviews
+            } catch (e: Exception) {
+                android.util.Log.e("ReviewRepository", "Error decoding reviews", e)
                 emptyList()
             }
-        } else emptyList()
+        } else {
+            android.util.Log.d("ReviewRepository", "No reviews found in storage")
+            emptyList()
+        }
     }
 
+
+
     suspend fun saveReview(review: ProductReview) {
-        context.dataStore.edit { prefs ->
-            val currentRaw = prefs[REVIEWS_KEY]
-            val current = if (currentRaw != null) {
-                try {
-                    Json.decodeFromString<List<ProductReview>>(currentRaw)
-                } catch (_: Exception) {
+        try {
+            context.dataStore.edit { prefs ->
+                val currentRaw = prefs[REVIEWS_KEY]
+                val current = if (currentRaw != null) {
+                    try {
+                        Json.decodeFromString<List<ProductReview>>(currentRaw)
+                    } catch (e: Exception) {
+                        android.util.Log.e("ReviewRepository", "Error decoding existing reviews", e)
+                        emptyList()
+                    }
+                } else {
                     emptyList()
                 }
-            } else emptyList()
-            val updated = current + review
-            prefs[REVIEWS_KEY] = Json.encodeToString(updated)
+
+                val updated = current + review
+                val encodedData = Json.encodeToString(updated)
+                prefs[REVIEWS_KEY] = encodedData
+
+                android.util.Log.d("ReviewRepository", "Review saved successfully. Total reviews: ${updated.size}")
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("ReviewRepository", "Error saving review", e)
+            throw e
         }
     }
 }
