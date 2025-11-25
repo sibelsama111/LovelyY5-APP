@@ -9,7 +9,6 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.sibelsama.lovelyy5.model.Order
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.encodeToString
 
@@ -23,47 +22,43 @@ class OrderRepository(private val context: Context) {
         val raw = prefs[ORDERS_KEY]
         if (raw != null) {
             try {
-                Json.decodeFromString<List<Order>>(raw)
-            } catch (_: Exception) {
+                val allOrders = Json.decodeFromString<List<Order>>(raw)
+                android.util.Log.d("OrderRepository", "Retrieved ${allOrders.size} orders")
+                allOrders
+            } catch (e: Exception) {
+                android.util.Log.e("OrderRepository", "Error decoding orders", e)
                 emptyList()
             }
-        } else emptyList()
+        } else {
+            android.util.Log.d("OrderRepository", "No orders found in storage")
+            emptyList()
+        }
     }
 
     suspend fun saveOrder(order: Order) {
-        context.dataStore.edit { prefs ->
-            val currentRaw = prefs[ORDERS_KEY]
-            val current = if (currentRaw != null) {
-                try {
-                    Json.decodeFromString<List<Order>>(currentRaw)
-                } catch (_: Exception) {
-                    emptyList()
-                }
-            } else emptyList()
-            val updated = current + order
-            prefs[ORDERS_KEY] = Json.encodeToString(updated)
-        }
-    }
-
-    suspend fun clearOrders() {
-        context.dataStore.edit { prefs ->
-            prefs.remove(ORDERS_KEY)
-        }
-    }
-
-    suspend fun getOrderById(id: String): Order? {
-        return context.dataStore.data
-            .map { prefs ->
-                val raw = prefs[ORDERS_KEY]
-                if (raw != null) {
+        try {
+            context.dataStore.edit { prefs ->
+                val currentRaw = prefs[ORDERS_KEY]
+                val current = if (currentRaw != null) {
                     try {
-                        Json.decodeFromString<List<Order>>(raw)
-                    } catch (_: Exception) {
+                        Json.decodeFromString<List<Order>>(currentRaw)
+                    } catch (e: Exception) {
+                        android.util.Log.e("OrderRepository", "Error decoding existing orders", e)
                         emptyList()
                     }
-                } else emptyList()
+                } else {
+                    emptyList()
+                }
+
+                val updated = current + order
+                val encodedData = Json.encodeToString(updated)
+                prefs[ORDERS_KEY] = encodedData
+
+                android.util.Log.d("OrderRepository", "Order saved successfully. Total orders: ${updated.size}")
             }
-            .map { list -> list.find { it.id == id } }
-            .firstOrNull()
+        } catch (e: Exception) {
+            android.util.Log.e("OrderRepository", "Error saving order", e)
+            throw e
+        }
     }
 }

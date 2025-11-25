@@ -29,30 +29,37 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sibelsama.lovelyy5.model.Product
+import com.sibelsama.lovelyy5.model.ProductItem
+import com.sibelsama.lovelyy5.ui.viewmodels.ProductViewModel
+import com.sibelsama.lovelyy5.ui.viewmodels.CartViewModel
 import com.sibelsama.lovelyy5.R
 import com.sibelsama.lovelyy5.ui.theme.LovelyY5APPTheme
-import com.sibelsama.lovelyy5.ui.viewmodels.CartViewModel
 
 @Composable
 fun ProductListScreen(
     onProductClick: (Product) -> Unit,
     onCartClick: () -> Unit,
     cartViewModel: CartViewModel = viewModel(),
-    onBackClick: () -> Unit = {}
+    onBackClick: () -> Unit = {},
+    initialCategory: String? = null
 ) {
     val cartItems by cartViewModel.cartItems.collectAsState()
-    val sampleProducts = listOf(
-        Product(1, "iPhone 13 mini", "iPhone 13 mini", 130000.0),
-        Product(2, "iPhone 13", "iPhone 13", 180000.0)
-    )
+    val productVm: ProductViewModel = viewModel()
+    val items by productVm.products.collectAsState()
+
+    // Mapear items (ProductItem) a objeto Product para el catálogo visual
+    val sampleProducts = items.map { it.toProduct() }
 
     var searchText by remember { mutableStateOf(TextFieldValue("")) }
     var sortOrder by remember { mutableStateOf(true) } // true: menor a mayor, false: mayor a menor
 
+    // Filtrar por categoría (si se entrega) usando el campo 'tipo' de ProductItem
     val filteredProducts = sampleProducts
-        .filter {
-            it.name.contains(searchText.text, ignoreCase = true) ||
-            it.description.contains(searchText.text, ignoreCase = true)
+        .filter { product ->
+            val prodItem = items.find { it.id == product.id }
+            val matchesCategory = if (initialCategory.isNullOrBlank()) true else prodItem?.tipo?.equals(initialCategory, ignoreCase = true) == true
+            val matchesSearch = product.name.contains(searchText.text, ignoreCase = true) || product.description.contains(searchText.text, ignoreCase = true)
+            matchesCategory && matchesSearch
         }
         .sortedBy { if (sortOrder) it.price else -it.price }
 
@@ -148,6 +155,9 @@ fun ProductListScreen(
         }
     }
 }
+
+// Helper mapper
+fun ProductItem.toProduct(): Product = Product(id = this.id, name = this.nombre, description = this.descripcion, price = this.precioActual)
 
 @Preview(showBackground = true)
 @Composable

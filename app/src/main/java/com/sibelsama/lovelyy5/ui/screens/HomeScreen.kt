@@ -33,6 +33,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.foundation.clickable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -47,9 +48,10 @@ import com.sibelsama.lovelyy5.ui.viewmodels.CartViewModel
 
 @Composable
 fun HomeScreen(
-    onProductClick: (Product) -> Unit, 
-    onCartClick: () -> Unit, 
+    onProductClick: (Product) -> Unit,
+    onCartClick: () -> Unit,
     onOrdersClick: () -> Unit,
+    onCategoryClick: (String) -> Unit,
     cartViewModel: CartViewModel = viewModel()
 ) {
     val sampleProducts = listOf(
@@ -75,6 +77,7 @@ fun HomeScreen(
             AppHeader(isHome = true)
             Spacer(modifier = Modifier.height(24.dp))
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                // Espacio para logo a la izquierda del título (mantener AppHeader simple)
                 Button(onClick = onOrdersClick) {
                     Icon(Icons.Default.Receipt, contentDescription = "Mis Pedidos", modifier = Modifier.size(24.dp))
                     Spacer(modifier = Modifier.width(8.dp))
@@ -88,7 +91,7 @@ fun HomeScreen(
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 items(sampleCategories) { category ->
-                    CategoryItem(category)
+                    CategoryItem(category = category, onClick = { onCategoryClick(category.name) })
                 }
             }
             Spacer(modifier = Modifier.height(16.dp))
@@ -144,8 +147,8 @@ fun SectionHeader(title: String) {
 }
 
 @Composable
-fun CategoryItem(category: Category) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+fun CategoryItem(category: Category, onClick: () -> Unit = {}) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.clickable { onClick() }) {
         Card(
             shape = CircleShape,
             modifier = Modifier.size(80.dp),
@@ -171,5 +174,5 @@ data class Category(val name: String, val icon: ImageVector)
 @Preview(showBackground = true)
 @Composable
 fun HomeScreenPreview() {
-    HomeScreen(onProductClick = {}, onCartClick = {}, onOrdersClick = {})
+    HomeScreen(onProductClick = {}, onCartClick = {}, onOrdersClick = {}, onCategoryClick = {})
 }

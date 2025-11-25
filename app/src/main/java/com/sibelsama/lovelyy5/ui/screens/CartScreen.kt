@@ -25,19 +25,42 @@ import androidx.compose.ui.platform.LocalContext
 import android.os.VibrationEffect
 import android.os.Vibrator
 import com.sibelsama.lovelyy5.ui.viewmodels.CartViewModel
+import androidx.compose.material3.AlertDialog
+import androidx.compose.ui.text.input.TextFieldValue
+import com.sibelsama.lovelyy5.model.Order
+import com.sibelsama.lovelyy5.model.ShippingDetails
+import com.sibelsama.lovelyy5.ui.viewmodels.OrderViewModel
+import java.text.SimpleDateFormat
+import java.util.*
 
 @Composable
 @SuppressLint("MissingPermission")
 fun CartScreen(
-    onConfirmProducts: () -> Unit,
     onClearCart: () -> Unit,
     onBackClick: () -> Unit = {},
+    onPurchaseCompleted: (com.sibelsama.lovelyy5.model.Order) -> Unit = {},
     cartViewModel: CartViewModel = viewModel()
 ) {
     val cartItems by cartViewModel.cartItems.collectAsState()
     val subtotal = cartItems.entries.sumOf { (product, quantity) -> product.price * quantity }
 
     val context = LocalContext.current
+    val orderViewModel: OrderViewModel = viewModel()
+
+    var showShippingForm by remember { mutableStateOf(false) }
+    var showSuccessDialog by remember { mutableStateOf(false) }
+
+    // Campos del formulario de envío
+    var rut by remember { mutableStateOf(TextFieldValue("")) }
+    var names by remember { mutableStateOf(TextFieldValue("")) }
+    var lastNames by remember { mutableStateOf(TextFieldValue("")) }
+    var phone by remember { mutableStateOf(TextFieldValue("")) }
+    var email by remember { mutableStateOf(TextFieldValue("")) }
+    var address by remember { mutableStateOf(TextFieldValue("")) }
+    var region by remember { mutableStateOf(TextFieldValue("")) }
+
+    // Tarifa de envío fija para ejemplo
+    val shippingCost = 5000.0
 
     Scaffold(
         topBar = {
@@ -137,11 +160,8 @@ fun CartScreen(
                 }
                 Button(
                     onClick = {
-                        val vibrator = context.getSystemService(Vibrator::class.java)
-                        if (vibrator != null) {
-                            vibrator.vibrate(VibrationEffect.createOneShot(2000, VibrationEffect.DEFAULT_AMPLITUDE))
-                        }
-                        onConfirmProducts()
+                        // En lugar de navegar directamente, mostrar el formulario de envío
+                        showShippingForm = true
                     },
                     modifier = Modifier.weight(1f).height(56.dp),
                     enabled = cartItems.isNotEmpty(),
@@ -152,6 +172,97 @@ fun CartScreen(
             }
             Spacer(modifier = Modifier.height(16.dp))
         }
+    }
+
+    if (showShippingForm) {
+        AlertDialog(
+            onDismissRequest = { showShippingForm = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    // Validar campos mínimos
+                    if (names.text.isBlank() || lastNames.text.isBlank() || phone.text.isBlank() || address.text.isBlank()) {
+                        // mostrar un simple toast
+                        android.widget.Toast.makeText(context, "Por favor completa los datos de envío", android.widget.Toast.LENGTH_SHORT).show()
+                        return@TextButton
+                    }
+
+                    // Construir ShippingDetails
+                    val shipping = ShippingDetails(
+                        rut = rut.text,
+                        names = names.text,
+                        lastNames = lastNames.text,
+                        phone = phone.text,
+                        email = email.text,
+                        address = address.text,
+                        region = region.text
+                    )
+
+                    // Crear ID de pedido basado en timestamp
+                    val id = SimpleDateFormat("yyyyMMddHHmmss", Locale.getDefault()).format(Date())
+
+                    val itemsMap = cartItems.entries.associate { (product, qty) -> product.id to qty }
+                    val total = subtotal + shippingCost
+
+                    val order = Order(
+                        id = id,
+                        shippingDetails = shipping,
+                        items = itemsMap,
+                        subtotal = subtotal,
+                        shippingCost = shippingCost,
+                        total = total
+                    )
+
+                    // Guardar el pedido
+                    orderViewModel.saveOrder(order)
+
+                    // Vibrar y mostrar alerta de éxito
+                    @Suppress("DEPRECATION")
+                    val vibrator = context.getSystemService(Vibrator::class.java)
+                    vibrator?.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE))
+
+                    showShippingForm = false
+                    showSuccessDialog = true
+
+                    // Limpiar carrito
+                    cartViewModel.clearCart()
+
+                    // Notificar al NavGraph con el order creado para navegar al detalle inmediatamente
+                    onPurchaseCompleted(order)
+                }) {
+                    Text("Confirmar compra")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showShippingForm = false }) { Text("Cancelar") }
+            },
+            title = { Text("Datos de Envío") },
+            text = {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    OutlinedTextField(value = rut, onValueChange = { rut = it }, label = { Text("RUT") }, modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(value = names, onValueChange = { names = it }, label = { Text("Nombre") }, modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(value = lastNames, onValueChange = { lastNames = it }, label = { Text("Apellido") }, modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(value = phone, onValueChange = { phone = it }, label = { Text("Teléfono") }, modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(value = email, onValueChange = { email = it }, label = { Text("Correo") }, modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(value = address, onValueChange = { address = it }, label = { Text("Dirección") }, modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(value = region, onValueChange = { region = it }, label = { Text("Región") }, modifier = Modifier.fillMaxWidth())
+                }
+            }
+        )
+    }
+
+    if (showSuccessDialog) {
+        AlertDialog(
+            onDismissRequest = { showSuccessDialog = false },
+            title = { Text("Compra efectuada correctamente! <3") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showSuccessDialog = false
+                    // ya navegó vía onPurchaseCompleted, solo cerrar dialogo
+                }) {
+                    Text("OK")
+                }
+            }
+        )
     }
 }
 
@@ -208,6 +319,6 @@ fun CartItem(
 @Composable
 fun CartScreenPreview() {
     LovelyY5APPTheme {
-        CartScreen(onConfirmProducts = {}, onClearCart = {})
+        CartScreen(onClearCart = {}, onPurchaseCompleted = {})
     }
 }

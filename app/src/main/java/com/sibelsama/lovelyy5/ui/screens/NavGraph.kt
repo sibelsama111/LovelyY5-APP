@@ -6,6 +6,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sibelsama.lovelyy5.ui.theme.LovelyY5APPTheme
 import com.sibelsama.lovelyy5.ui.viewmodels.CartViewModel
 import com.sibelsama.lovelyy5.ui.viewmodels.ReviewViewModel
+import com.sibelsama.lovelyy5.model.Order
 import androidx.compose.ui.tooling.preview.Preview
 
 // Instancia usada exclusivamente para previews (construida fuera de la composición)
@@ -13,9 +14,11 @@ private val previewCartVm = CartViewModel()
 
 sealed class Screen {
     object Home : Screen()
-    object Products : Screen()
+    data class Products(val category: String? = null) : Screen()
     data class ProductDetail(val productId: Int) : Screen()
     object Cart : Screen()
+    object Orders : Screen()
+    data class OrderDetail(val order: Order) : Screen()
 }
 
 @Composable
@@ -26,6 +29,8 @@ fun NavGraph(
     // Crear viewModels dentro de la composición si no se inyectaron
     val cartVm: CartViewModel = cartViewModel ?: viewModel()
     val reviewVm: ReviewViewModel = reviewViewModel ?: viewModel()
+    val productVm: com.sibelsama.lovelyy5.ui.viewmodels.ProductViewModel = viewModel()
+    val orderVm: com.sibelsama.lovelyy5.ui.viewmodels.OrderViewModel = viewModel()
 
     var currentScreen by remember { mutableStateOf<Screen>(Screen.Home) }
 
@@ -33,22 +38,24 @@ fun NavGraph(
         is Screen.Home -> HomeScreen(
             onProductClick = { product -> currentScreen = Screen.ProductDetail(product.id) },
             onCartClick = { currentScreen = Screen.Cart },
-            onOrdersClick = { /* orders removed in simplified app */ },
+            onOrdersClick = { currentScreen = Screen.Orders },
+            onCategoryClick = { category -> currentScreen = Screen.Products(category) },
             cartViewModel = cartVm
         )
-        is Screen.Products -> ProductListScreen(
-            onProductClick = { product -> currentScreen = Screen.ProductDetail(product.id) },
-            onCartClick = { currentScreen = Screen.Cart },
-            cartViewModel = cartVm,
-            onBackClick = { currentScreen = Screen.Home }
-        )
-        is Screen.ProductDetail -> {
-            // Use a small local sample catalog for previews/navigation
-            val sampleProducts = listOf(
-                com.sibelsama.lovelyy5.model.Product(1, "iPhone 13 mini", "iPhone 13 mini", 130000.0),
-                com.sibelsama.lovelyy5.model.Product(2, "iPhone 13", "iPhone 13", 180000.0)
+        is Screen.Products -> {
+            val category = screen.category
+            ProductListScreen(
+                onProductClick = { product -> currentScreen = Screen.ProductDetail(product.id) },
+                onCartClick = { currentScreen = Screen.Cart },
+                cartViewModel = cartVm,
+                onBackClick = { currentScreen = Screen.Home },
+                initialCategory = category
             )
-            val product = sampleProducts.find { it.id == screen.productId }
+        }
+        is Screen.ProductDetail -> {
+            // Buscar producto en el catálogo cargado desde JSON
+            val productItem = productVm.products.collectAsState().value.find { it.id == screen.productId }
+            val product = productItem?.toProduct()
             if (product != null) {
                 ProductDetailScreen(
                     product = product,
@@ -61,11 +68,21 @@ fun NavGraph(
             }
         }
         is Screen.Cart -> CartScreen(
-            onConfirmProducts = { cartVm.clearCart() },
             onClearCart = { cartVm.clearCart() },
             onBackClick = { currentScreen = Screen.Home },
+            onPurchaseCompleted = { currentScreen = Screen.Orders },
             cartViewModel = cartVm
         )
+        is Screen.Orders -> {
+            val orders by orderVm.orders.collectAsState()
+            OrderListScreen(orders = orders, onOrderClick = { orderId ->
+                val ord = orderVm.orders.value.find { it.id == orderId }
+                if (ord != null) currentScreen = Screen.OrderDetail(ord)
+            }, onBackClick = { currentScreen = Screen.Home })
+        }
+        is Screen.OrderDetail -> {
+            OrderDetailScreen(order = screen.order, onBackClick = { currentScreen = Screen.Orders })
+        }
     }
 }
 @Preview(showBackground = true)

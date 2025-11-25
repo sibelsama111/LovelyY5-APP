@@ -1,0 +1,45 @@
+[
+  {
+    "id": 1,
+    "codigo": "LVL5_IPHONE13_128GB_BLANCO",
+    "createdAt": "2025-11-21T03:32:57-03:00",
+    "descripcion": "El iPhone 13 ofrece rendimiento fuera de serie gracias a su chip A15 Bionic. Sus ventajas incluyen una pantalla Super Retina XDR de 6.1\" más brillante con Ceramic Shield (mayor resistencia) y una batería con autonomía mejorada. Cuenta con un avanzado sistema de cámara dual de 12 MP que permite grabar en Modo Cine, capturando fotos nítidas y videos estables. Soporta 5G y carga MagSafe. Es el equipo premium, potente y duradero ideal para ti <3",
+    "detalles": {"color": "Blanco", "capacidad": "128 GB", "modelo": "A2633"},
+    "imagenes": ["/assets/images/iphone13_128_blanco.png"],
+    "marca": "Apple",
+    "nombre": "iPhone 13",
+    "precioActual": 549990,
+    "precioOriginal": 869990,
+    "stock": 5,
+    "tipo": "iPhones"
+  },
+  {
+    "id": 2,
+    "codigo": "LVL5_IPAD_AIR_128GB_ROSE",
+    "createdAt": "2025-10-10T10:00:00-03:00",
+    "descripcion": "iPad Air con chip M1 y 128 GB de almacenamiento.",
+    "detalles": {"color": "Rose Gold", "capacidad": "128 GB"},
+    "imagenes": ["/assets/images/ipad_air_128_rose.png"],
+    "marca": "Apple",
+    "nombre": "iPad Air",
+    "precioActual": 213000,
+    "precioOriginal": 259990,
+    "stock": 12,
+    "tipo": "Tablets"
+  },
+  {
+    "id": 3,
+    "codigo": "LVL5_IPHONE13MINI_1TB_GREY",
+    "createdAt": "2025-11-01T12:00:00-03:00",
+    "descripcion": "iPhone 13 mini con almacenamiento ampliado.",
+    "detalles": {"color": "Space grey", "capacidad": "1 TB"},
+    "imagenes": ["/assets/images/iphone13_mini_1tb_grey.png"],
+    "marca": "Apple",
+    "nombre": "iPhone 13 mini",
+    "precioActual": 250000,
+    "precioOriginal": 329990,
+    "stock": 3,
+    "tipo": "Tablets"
+  }
+]
+
