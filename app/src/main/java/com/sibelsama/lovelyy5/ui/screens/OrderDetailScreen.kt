@@ -1,6 +1,5 @@
 package com.sibelsama.lovelyy5.ui.screens
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -8,10 +7,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -19,23 +19,25 @@ import com.sibelsama.lovelyy5.model.Order
 import com.sibelsama.lovelyy5.model.Product
 import com.sibelsama.lovelyy5.model.ShippingDetails
 import com.sibelsama.lovelyy5.ui.theme.LovelyY5APPTheme
-import com.sibelsama.lovelyy5.R
 import androidx.compose.ui.graphics.Color
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.HorizontalDivider
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.sibelsama.lovelyy5.ui.viewmodels.ProductViewModel
 
 @Composable
 fun OrderDetailScreen(order: Order, onBackClick: () -> Unit = {}) {
-    val sampleProducts = listOf(
-        Product(1, "iPad Air", "Rose Gold - 128 GB", 213000.0),
-        Product(2, "iPhone 13 mini", "Space grey - 1TB GB", 250000.0),
-        Product(3, "iPhone 13", "128 GB", 180000.0)
-    )
+    // Obtener productos reales desde ProductViewModel (cargados desde assets/products.json)
+    val productVm: ProductViewModel = viewModel()
+    val productItems by productVm.products.collectAsState()
 
-    fun findProductById(id: Int): Product? = sampleProducts.find { it.id == id }
+    fun findProductById(id: Int): Product? {
+        val pItem = productItems.find { it.id == id }
+        return pItem?.toProduct()
+    }
 
     LazyColumn(
         modifier = Modifier
@@ -65,6 +67,7 @@ fun OrderDetailScreen(order: Order, onBackClick: () -> Unit = {}) {
                 Text(order.shippingDetails.phone, style = MaterialTheme.typography.bodySmall)
                 Text(order.shippingDetails.email, style = MaterialTheme.typography.bodySmall)
                 Text(order.shippingDetails.address, style = MaterialTheme.typography.bodySmall)
+                Text(order.shippingDetails.comuna, style = MaterialTheme.typography.bodySmall)
                 Text(order.shippingDetails.region, style = MaterialTheme.typography.bodySmall)
             }
             Spacer(modifier = Modifier.height(16.dp))
@@ -74,6 +77,7 @@ fun OrderDetailScreen(order: Order, onBackClick: () -> Unit = {}) {
 
         items(order.items.entries.toList()) { (productId, quantity) ->
             val product = findProductById(productId)
+            val pItem = productItems.find { it.id == productId }
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -83,12 +87,12 @@ fun OrderDetailScreen(order: Order, onBackClick: () -> Unit = {}) {
                 shape = RoundedCornerShape(8.dp)
             ) {
                 Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                    // placeholder image
+                    // Imagen del producto tomada del ProductItem si existe
                     Box(modifier = Modifier
                         .size(64.dp)
                         .clip(RoundedCornerShape(6.dp))
                         .background(Color(0xFFF0E8F5)), contentAlignment = Alignment.Center) {
-                        Image(painter = painterResource(id = R.drawable.ic_launcher_background), contentDescription = "img", modifier = Modifier.size(28.dp))
+                        ProductImage(imagePath = pItem?.imagenes?.firstOrNull(), contentDescription = "img", modifier = Modifier.size(48.dp))
                     }
                     Spacer(modifier = Modifier.width(12.dp))
                     Column(modifier = Modifier.weight(1f)) {
@@ -136,7 +140,7 @@ fun OrderDetailScreen(order: Order, onBackClick: () -> Unit = {}) {
 fun OrderDetailScreenPreview() {
     val dummyOrder = Order(
         id = "00001",
-        shippingDetails = ShippingDetails("12.345.678-9", "Laurita", "Jimenez", "+56 9 9999 9999", "laurita.jiji@hotmail.com", "Calle verde #35, comuna segura", "XV - Región de Arica y Parinacota"),
+        shippingDetails = ShippingDetails("12.345.678-9", "Laurita", "Jimenez", "+56 9 9999 9999", "laurita.jiji@hotmail.com", "Calle verde #35", "XV - Región de Arica y Parinacota", "Comuna segura"),
         items = mapOf(1 to 3, 2 to 1),
         subtotal = 640000.0,
         shippingCost = 5000.0,

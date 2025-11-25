@@ -10,7 +10,8 @@ data class ShippingDetails(
     val phone: String,
     val email: String,
     val address: String,
-    val region: String
+    val region: String,
+    val comuna: String
 )
 
 /**

@@ -34,6 +34,9 @@ import com.sibelsama.lovelyy5.ui.viewmodels.ProductViewModel
 import com.sibelsama.lovelyy5.ui.viewmodels.CartViewModel
 import com.sibelsama.lovelyy5.R
 import com.sibelsama.lovelyy5.ui.theme.LovelyY5APPTheme
+import androidx.compose.ui.platform.LocalContext
+import coil.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
 
 @Composable
 fun ProductListScreen(
@@ -47,13 +50,11 @@ fun ProductListScreen(
     val productVm: ProductViewModel = viewModel()
     val items by productVm.products.collectAsState()
 
-    // Mapear items (ProductItem) a objeto Product para el catálogo visual
     val sampleProducts = items.map { it.toProduct() }
 
     var searchText by remember { mutableStateOf(TextFieldValue("")) }
-    var sortOrder by remember { mutableStateOf(true) } // true: menor a mayor, false: mayor a menor
+    var sortOrder by remember { mutableStateOf(true) }
 
-    // Filtrar por categoría (si se entrega) usando el campo 'tipo' de ProductItem
     val filteredProducts = sampleProducts
         .filter { product ->
             val prodItem = items.find { it.id == product.id }
@@ -122,14 +123,9 @@ fun ProductListScreen(
                     elevation = CardDefaults.cardElevation(2.dp)
                 ) {
                     Column(modifier = Modifier.padding(8.dp)) {
-                        Image(
-                            painter = painterResource(id = R.drawable.ic_launcher_background),
-                            contentDescription = product.name,
-                            modifier = Modifier
-                                .height(100.dp)
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(12.dp))
-                        )
+                        val prodItem = items.find { it.id == product.id }
+                        val imgPath = prodItem?.imagenes?.firstOrNull()
+                        ProductImage(imagePath = imgPath, contentDescription = product.name, modifier = Modifier.height(100.dp).fillMaxWidth().clip(RoundedCornerShape(12.dp)))
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(product.name, style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold))
                         Text("$${product.price.toInt()} CLP", style = MaterialTheme.typography.bodyMedium)
@@ -156,8 +152,33 @@ fun ProductListScreen(
     }
 }
 
-// Helper mapper
-fun ProductItem.toProduct(): Product = Product(id = this.id, name = this.nombre, description = this.descripcion, price = this.precioActual)
+fun ProductItem.toProduct(): Product = Product(id = this.id, name = this.nombre, description = this.descripcion, price = this.precioActual, tipo = this.tipo)
+
+@Composable
+fun ProductImage(imagePath: String?, contentDescription: String?, modifier: Modifier = Modifier) {
+    val ctx = LocalContext.current
+    if (imagePath.isNullOrBlank()) {
+        AsyncImage(model = "file:///android_asset/images/app_icon.png", contentDescription = contentDescription, modifier = modifier, contentScale = ContentScale.Crop)
+        return
+    }
+
+    val fileName = imagePath.substringAfterLast('/').substringBeforeLast('.')
+    val resId = ctx.resources.getIdentifier(fileName, "drawable", ctx.packageName)
+    if (resId != 0) {
+        Image(painter = painterResource(id = resId), contentDescription = contentDescription, modifier = modifier, contentScale = ContentScale.Crop)
+        return
+    }
+
+    val assetRelative = when {
+        imagePath.contains("/assets/") -> imagePath.substringAfter("/assets/")
+        imagePath.startsWith("assets/") -> imagePath.substringAfter("assets/")
+        imagePath.startsWith("/") -> imagePath.trimStart('/')
+        else -> imagePath
+    }
+
+    val assetUri = "file:///android_asset/$assetRelative"
+    AsyncImage(model = assetUri, contentDescription = contentDescription, modifier = modifier, contentScale = ContentScale.Crop)
+}
 
 @Preview(showBackground = true)
 @Composable

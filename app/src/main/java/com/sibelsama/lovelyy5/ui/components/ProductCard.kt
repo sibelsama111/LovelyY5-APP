@@ -1,7 +1,6 @@
 package com.sibelsama.lovelyy5.ui.components
 
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -22,15 +21,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.sibelsama.lovelyy5.R
+import androidx.compose.ui.text.font.FontWeight
 import com.sibelsama.lovelyy5.model.Product
+import com.sibelsama.lovelyy5.ui.screens.ProductImage
 
 @Composable
-fun ProductCard(product: Product, onProductClick: (Product) -> Unit, onAddToCartClick: () -> Unit) {
+fun ProductCard(product: Product, onProductClick: (Product) -> Unit, onAddToCartClick: () -> Unit, imagePath: String? = null) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(if (isPressed) 0.95f else 1f, label = "")
@@ -46,14 +43,13 @@ fun ProductCard(product: Product, onProductClick: (Product) -> Unit, onAddToCart
             ) { onProductClick(product) }
     ) {
         Column {
-            Image(
-                painter = painterResource(id = R.drawable.ic_launcher_background), // Reemplazar con la imagen del producto
+            ProductImage(
+                imagePath = imagePath,
                 contentDescription = product.name,
                 modifier = Modifier
                     .height(120.dp)
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)),
-                contentScale = ContentScale.Crop
+                    .clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp))
             )
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(

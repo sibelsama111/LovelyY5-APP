@@ -3,43 +3,204 @@
     "id": 1,
     "codigo": "LVL5_IPHONE13_128GB_BLANCO",
     "createdAt": "2025-11-21T03:32:57-03:00",
-    "descripcion": "El iPhone 13 ofrece rendimiento fuera de serie gracias a su chip A15 Bionic. Sus ventajas incluyen una pantalla Super Retina XDR de 6.1\" más brillante con Ceramic Shield (mayor resistencia) y una batería con autonomía mejorada. Cuenta con un avanzado sistema de cámara dual de 12 MP que permite grabar en Modo Cine, capturando fotos nítidas y videos estables. Soporta 5G y carga MagSafe. Es el equipo premium, potente y duradero ideal para ti <3",
-    "detalles": {"color": "Blanco", "capacidad": "128 GB", "modelo": "A2633"},
-    "imagenes": ["/assets/images/iphone13_128_blanco.png"],
+    "descripcion": "El iPhone 13 ofrece rendimiento fuera de serie gracias a su chip A15 Bionic. Sus ventajas incluyen una pantalla Super Retina XDR de 6.1\" más brillante con Ceramic Shield y una batería con autonomía mejorada. Ideal para ti <3",
+    "detalles": {
+      "color": "Blanco",
+      "capacidad": "128 GB",
+      "modelo": "A2633"
+    },
+    "imagenes": [
+      "/assets/images/iphone13_128_blanco1.jpg" , "/assets/images/iphone13_128_blanco2.jpg" ,"/assets/images/iphone13_128_blanco3.jpg" , "/assets/images/iphone13_128_blanco4.jpg"
+    ],
     "marca": "Apple",
     "nombre": "iPhone 13",
     "precioActual": 549990,
     "precioOriginal": 869990,
     "stock": 5,
-    "tipo": "iPhones"
+    "tipo": "Celulares"
   },
   {
     "id": 2,
-    "codigo": "LVL5_IPAD_AIR_128GB_ROSE",
-    "createdAt": "2025-10-10T10:00:00-03:00",
-    "descripcion": "iPad Air con chip M1 y 128 GB de almacenamiento.",
-    "detalles": {"color": "Rose Gold", "capacidad": "128 GB"},
-    "imagenes": ["/assets/images/ipad_air_128_rose.png"],
-    "marca": "Apple",
-    "nombre": "iPad Air",
-    "precioActual": 213000,
-    "precioOriginal": 259990,
-    "stock": 12,
-    "tipo": "Tablets"
+    "codigo": "LVL5_SAMSUNG_S23FE_128GB_MENTA",
+    "createdAt": "2025-11-22T10:15:00-03:00",
+    "descripcion": "El Galaxy S23 FE es puro estilo y potencia. Con su cámara Nightography capturarás fotos increíbles de noche. Pantalla Dynamic AMOLED 2X suave de 120Hz para tus series favoritas.",
+    "detalles": {
+      "color": "Menta",
+      "capacidad": "128 GB",
+      "procesador": "Exynos 2200",
+      "ram": "8 GB"
+    },
+    "imagenes": [
+      "/assets/images/samsung_s23fe_menta1.jpg","/assets/images/samsung_s23fe_menta2.jpg","/assets/images/samsung_s23fe_menta3.jpg","/assets/images/samsung_s23fe_menta4.jpg"
+    ],
+    "marca": "Samsung",
+    "nombre": "Samsung Galaxy S23 FE",
+    "precioActual": 499990,
+    "precioOriginal": 649990,
+    "stock": 8,
+    "tipo": "Celulares"
   },
   {
     "id": 3,
-    "codigo": "LVL5_IPHONE13MINI_1TB_GREY",
-    "createdAt": "2025-11-01T12:00:00-03:00",
-    "descripcion": "iPhone 13 mini con almacenamiento ampliado.",
-    "detalles": {"color": "Space grey", "capacidad": "1 TB"},
-    "imagenes": ["/assets/images/iphone13_mini_1tb_grey.png"],
-    "marca": "Apple",
-    "nombre": "iPhone 13 mini",
-    "precioActual": 250000,
-    "precioOriginal": 329990,
-    "stock": 3,
+    "codigo": "LVL5_XIAOMI_REDMI13_256GB_NEGRO",
+    "createdAt": "2025-11-20T09:30:00-03:00",
+    "descripcion": "Rendimiento increíble a un precio justo. El Redmi Note 13 destaca por su cámara de 108MP y carga rápida de 33W. Perfecto para estar siempre conectado sin gastar de más.",
+    "detalles": {
+      "color": "Negro Medianoche",
+      "capacidad": "256 GB",
+      "pantalla": "6.67 FHD+"
+    },
+    "imagenes": [
+      "/assets/images/xiaomi_redmi13_negro1.jpg","/assets/images/xiaomi_redmi13_negro2.jpg","/assets/images/xiaomi_redmi13_negro3.jpeg","/assets/images/xiaomi_redmi13_negro4.jpg"
+    ],
+    "marca": "Xiaomi",
+    "nombre": "Xiaomi Redmi Note 13",
+    "precioActual": 199990,
+    "precioOriginal": 249990,
+    "stock": 15,
+    "tipo": "Celulares"
+  },
+  {
+    "id": 4,
+    "codigo": "LVL5_TAB_S9FE_128GB_LAVANDA",
+    "createdAt": "2025-10-15T14:20:00-03:00",
+    "descripcion": "Desata tu creatividad con la Galaxy Tab S9 FE. Incluye S Pen resistente al agua para que dibujes o tomes notas donde quieras. Pantalla inmersiva y diseño colorido.",
+    "detalles": {
+      "color": "Lavanda",
+      "capacidad": "128 GB",
+      "conectividad": "Wi-Fi"
+    },
+    "imagenes": [
+      "/assets/images/tab_s9fe_lavanda1.jpg","/assets/images/tab_s9fe_lavanda2.jpg","/assets/images/tab_s9fe_lavanda3.jpg","/assets/images/tab_s9fe_lavanda4.jpg"
+    ],
+    "marca": "Samsung",
+    "nombre": "Samsung Galaxy Tab S9 FE",
+    "precioActual": 389990,
+    "precioOriginal": 449990,
+    "stock": 7,
     "tipo": "Tablets"
+  },
+  {
+    "id": 5,
+    "codigo": "LVL5_IPAD_10GEN_64GB_AZUL",
+    "createdAt": "2025-11-10T11:00:00-03:00",
+    "descripcion": "Colorido, capaz y lleno de posibilidades. El iPad de 10ª generación con diseño todo pantalla y chip A14 Bionic es tu compañero ideal para estudiar y crear.",
+    "detalles": {
+      "color": "Azul",
+      "capacidad": "64 GB",
+      "pantalla": "Liquid Retina 10.9\""
+    },
+    "imagenes": [
+      "/assets/images/ipad_10gen_azul1.jpg","/assets/images/ipad_10gen_azul2.jpg","/assets/images/ipad_10gen_azul3.jpg","/assets/images/ipad_10gen_azul4.jpg"
+    ],
+    "marca": "Apple",
+    "nombre": "iPad 10.9\" (10ª Gen)",
+    "precioActual": 429990,
+    "precioOriginal": 529990,
+    "stock": 4,
+    "tipo": "Tablets"
+  },
+  {
+    "id": 6,
+    "codigo": "LVL5_MACBOOK_AIR_M1_SPACEGREY",
+    "createdAt": "2025-11-05T16:45:00-03:00",
+    "descripcion": "El notebook más popular de Apple. El chip M1 ofrece un salto gigante en rendimiento y una batería que dura todo el día. Silencioso (sin ventilador) y ultra portátil.",
+    "detalles": {
+      "color": "Space Grey",
+      "procesador": "Apple M1",
+      "ram": "8 GB",
+      "ssd": "256 GB"
+    },
+    "imagenes": [
+      "/assets/images/macbook_air_m11.jpg","/assets/images/macbook_air_m12.jpg","/assets/images/macbook_air_m13.jpg","/assets/images/macbook_air_m14.jpg"
+    ],
+    "marca": "Apple",
+    "nombre": "MacBook Air M1 13\"",
+    "precioActual": 749990,
+    "precioOriginal": 999990,
+    "stock": 10,
+    "tipo": "Computadores"
+  },
+  {
+    "id": 7,
+    "codigo": "LVL5_LENOVO_IDEAPAD3_RYZEN5",
+    "createdAt": "2025-11-18T09:00:00-03:00",
+    "descripcion": "Eficiencia para tu día a día. Con procesador AMD Ryzen 5, este Lenovo es ideal para trabajos de universidad y multitarea. Diseño ligero y elegante en color abismo azul.",
+    "detalles": {
+      "color": "Abyss Blue",
+      "procesador": "AMD Ryzen 5 7520U",
+      "ram": "8 GB",
+      "ssd": "512 GB"
+    },
+    "imagenes": [
+      "/assets/images/lenovo_ideapad3_azul1.jpg","/assets/images/lenovo_ideapad3_azul2.jpg","/assets/images/lenovo_ideapad3_azul3.jpg","/assets/images/lenovo_ideapad3_azul4.jpg"
+    ],
+    "marca": "Lenovo",
+    "nombre": "Lenovo IdeaPad Slim 3",
+    "precioActual": 449990,
+    "precioOriginal": 599990,
+    "stock": 6,
+    "tipo": "Computadores"
+  },
+  {
+    "id": 8,
+    "codigo": "LVL5_ASUS_VIVOBOOK_OLED",
+    "createdAt": "2025-11-12T13:30:00-03:00",
+    "descripcion": "Colores que saltan a la vista. Pantalla OLED que ofrece negros puros y colores vibrantes. Perfecto para diseñadores o amantes del cine que buscan portabilidad.",
+    "detalles": {
+      "color": "Plata",
+      "procesador": "Intel Core i5",
+      "pantalla": "15.6\" OLED",
+      "ssd": "512 GB"
+    },
+    "imagenes": [
+      "/assets/images/asus_vivobook_oled1.jpg","/assets/images/asus_vivobook_oled2.jpg","/assets/images/asus_vivobook_oled3.jpg","/assets/images/asus_vivobook_oled4.jpg"
+    ],
+    "marca": "Asus",
+    "nombre": "Asus Vivobook Go 15 OLED",
+    "precioActual": 589990,
+    "precioOriginal": 729990,
+    "stock": 3,
+    "tipo": "Computadores"
+  },
+  {
+    "id": 9,
+    "codigo": "LVL5_JBL_TUNE520_NEGRO",
+    "createdAt": "2025-11-23T08:00:00-03:00",
+    "descripcion": "Bajos puros JBL. Disfruta de hasta 57 horas de música sin cables y carga rápida (5 min = 3 horas). Ligeros, cómodos y plegables para llevarlos a todos lados.",
+    "detalles": {
+      "color": "Negro",
+      "tipo": "On-Ear",
+      "conexion": "Bluetooth 5.3"
+    },
+    "imagenes": [
+      "/assets/images/jbl_tune520_negro1.jpg","/assets/images/jbl_tune520_negro2.jpg","/assets/images/jbl_tune520_negro3.jpg","/assets/images/jbl_tune520_negro4.jpg"
+    ],
+    "marca": "JBL",
+    "nombre": "Audífonos JBL Tune 520BT",
+    "precioActual": 39990,
+    "precioOriginal": 49990,
+    "stock": 25,
+    "tipo": "Audifonos"
+  },
+  {
+    "id": 10,
+    "codigo": "LVL5_AIRPODS_PRO2_USBC",
+    "createdAt": "2025-11-15T15:10:00-03:00",
+    "descripcion": "La mejor cancelación de ruido del mercado. Los AirPods Pro (2.ª gen) ofrecen audio espacial personalizado y estuche de carga MagSafe (USB-C). Magia para tus oídos.",
+    "detalles": {
+      "color": "Blanco",
+      "tipo": "In-Ear",
+      "extras": "Cancelación Activa de Ruido"
+    },
+    "imagenes": [
+      "/assets/images/airpods_pro21.jpg","/assets/images/airpods_pro22.jpg","/assets/images/airpods_pro23.jpg","/assets/images/airpods_pro24.jpg"
+    ],
+    "marca": "Apple",
+    "nombre": "AirPods Pro (2.ª Gen)",
+    "precioActual": 249990,
+    "precioOriginal": 299990,
+    "stock": 8,
+    "tipo": "Audifonos"
   }
 ]
-

@@ -87,7 +87,7 @@ fun OrderListScreenPreview() {
     val dummyOrders = listOf(
         Order(
             id = "00001",
-            shippingDetails = ShippingDetails("12.345.678-9", "Gino", "Sama", "+56912345678", "gino@sama.com", "Calle Falsa 123", "RM - Región Metropolitana"),
+            shippingDetails = ShippingDetails("12.345.678-9", "Gino", "Sama", "+56912345678", "gino@sama.com", "Calle Falsa 123", "RM - Región Metropolitana", "Santiago"),
             // items: Map<productId, quantity>
             items = mapOf(1 to 3),
             subtotal = 390000.0,

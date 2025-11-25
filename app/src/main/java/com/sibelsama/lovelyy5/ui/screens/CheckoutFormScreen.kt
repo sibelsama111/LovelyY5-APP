@@ -48,8 +48,9 @@ fun CheckoutFormScreen(
         lastNames = "",
         phone = "+56 9 9999 9999",
         email = "laurita.jiji@hotmail.com",
-        address = "Calle verde #35, comuna segura",
-        region = "XV - Región de Arica y Parinacota"
+        address = "Calle verde #35",
+        region = "XV - Región de Arica y Parinacota",
+        comuna = "comuna segura"
     ),
     products: List<Pair<Product, Int>> = listOf(
         Product(1, "iPad Air", "Rose Gold - 128 GB", 213000.0) to 3,

@@ -17,39 +17,38 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Color(0xFFFD5799), // enf_pink
-    secondary = Color(0xFFFFC9DC), // light_pink
-    tertiary = Color(0xFFFFACCA), // pink
-    background = Color(0xFF260303), // ebano
-    surface = Color(0xFF260303), // ebano
-    onPrimary = Color(0xFFFFFFFF), // white
-    onSecondary = Color(0xFFFFFFFF), // white
-    onTertiary = Color(0xFFFFFFFF), // white
-    onBackground = Color(0xFFFFFFFF), // white
-    onSurface = Color(0xFFFFFFFF), // white
-    error = Color(0xFFFF0000), // red
+    primary = Color(0xFFFD5799),
+    secondary = Color(0xFFFFC9DC),
+    tertiary = Color(0xFFFFACCA),
+    background = Color(0xFF260303),
+    surface = Color(0xFF260303),
+    onPrimary = Color(0xFFFFFFFF),
+    onSecondary = Color(0xFFFFFFFF),
+    onTertiary = Color(0xFFFFFFFF),
+    onBackground = Color(0xFFFFFFFF),
+    onSurface = Color(0xFFFFFFFF),
+    error = Color(0xFFFF0000),
     onError = Color(0xFFFFFFFF)
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Color(0xFFFD5799), // enf_pink
-    secondary = Color(0xFFFFC9DC), // light_pink
-    tertiary = Color(0xFFFFACCA), // pink
-    background = Color(0xFFFFFFFF), // white
-    surface = Color(0xFFFFFFFF), // white
-    onPrimary = Color(0xFFFFFFFF), // white
-    onSecondary = Color(0xFFFFFFFF), // white
-    onTertiary = Color(0xFFFFFFFF), // white
-    onBackground = Color(0xFF260303), // ebano
-    onSurface = Color(0xFF260303), // ebano
-    error = Color(0xFFFF0000), // red
+    primary = Color(0xFFFD5799),
+    secondary = Color(0xFFFFC9DC),
+    tertiary = Color(0xFFFFACCA),
+    background = Color(0xFFFFFFFF),
+    surface = Color(0xFFFFFFFF),
+    onPrimary = Color(0xFFFFFFFF),
+    onSecondary = Color(0xFFFFFFFF),
+    onTertiary = Color(0xFFFFFFFF),
+    onBackground = Color(0xFF260303),
+    onSurface = Color(0xFF260303),
+    error = Color(0xFFFF0000),
     onError = Color(0xFFFFFFFF)
 )
 
 @Composable
 fun LovelyY5APPTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
@@ -73,7 +72,7 @@ fun LovelyY5APPTheme(
 
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = Typography, // Assuming Typography is defined in Typography.kt
+        typography = Typography,
         content = content
     )
 }

@@ -40,6 +40,8 @@ fun NavGraph(
             onCartClick = { currentScreen = Screen.Cart },
             onOrdersClick = { currentScreen = Screen.Orders },
             onCategoryClick = { category -> currentScreen = Screen.Products(category) },
+            onSeeAllProducts = { currentScreen = Screen.Products(null) },
+            onSeeAllCategories = { currentScreen = Screen.Products(null) },
             cartViewModel = cartVm
         )
         is Screen.Products -> {
@@ -57,12 +59,8 @@ fun NavGraph(
             val productItem = productVm.products.collectAsState().value.find { it.id == screen.productId }
             val product = productItem?.toProduct()
             if (product != null) {
-                ProductDetailScreen(
-                    product = product,
-                    reviewViewModel = reviewVm,
-                    onAddToCart = { cartVm.addToCart(product) },
-                    onBackClick = { currentScreen = Screen.Home }
-                )
+                // Pasar argumentos posicionalmente para evitar discrepancias en nombres
+                ProductDetailScreen(product, productItem, reviewVm, { cartVm.addToCart(product) }, { currentScreen = Screen.Home })
             } else {
                 Text("Producto no encontrado")
             }

@@ -5,7 +5,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import android.net.Uri
 import androidx.compose.foundation.background
-
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.horizontalScroll
@@ -15,21 +14,15 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import coil.compose.rememberAsyncImagePainter
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import com.sibelsama.lovelyy5.model.Product
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.ui.input.pointer.pointerInput
+import kotlin.math.abs
+import androidx.compose.foundation.clickable
 import androidx.compose.ui.platform.LocalContext
 import android.os.VibrationEffect
 import android.os.Vibrator
+import com.sibelsama.lovelyy5.model.Product
+import com.sibelsama.lovelyy5.model.ProductItem
 import com.sibelsama.lovelyy5.model.ProductReview
 import com.sibelsama.lovelyy5.ui.viewmodels.ReviewViewModel
 import android.Manifest
@@ -38,16 +31,25 @@ import androidx.core.content.ContextCompat
 import android.widget.Toast
 import java.io.File
 import android.content.Context
-
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.layout.ContentScale
 
 @Composable
 fun ProductDetailScreen(
     product: Product,
+    productItem: ProductItem? = null,
     reviewViewModel: ReviewViewModel,
     onAddToCart: () -> Unit,
     onBackClick: () -> Unit = {}
 ) {
-    // Estado COMPLETAMENTE ESTÁTICO para valoraciones - no más reactivo
     var reviews by remember { mutableStateOf(listOf<ProductReview>()) }
     var reviewsLoaded by remember { mutableStateOf(false) }
 
@@ -56,18 +58,15 @@ fun ProductDetailScreen(
     var rating by remember { mutableStateOf(1) }
     var images by remember { mutableStateOf(listOf<Uri>()) }
 
-    // Cargar valoraciones UNA SOLA VEZ usando corrutina simple
     LaunchedEffect(product.id) {
         if (!reviewsLoaded) {
             try {
-                // Obtener snapshot actual del estado sin suscribirse a cambios
                 val currentReviews = reviewViewModel.getReviews(product.id).value
                 reviews = currentReviews
                 reviewsLoaded = true
                 android.util.Log.d("ProductDetailScreen", "Reviews loaded once: ${currentReviews.size}")
             } catch (e: Exception) {
                 android.util.Log.e("ProductDetailScreen", "Error loading reviews", e)
-                // Inicializar con lista vacía para evitar estados indefinidos
                 reviews = emptyList()
                 reviewsLoaded = true
             }
@@ -76,12 +75,9 @@ fun ProductDetailScreen(
 
     val context = LocalContext.current
 
-    // Valoraciones se cargan automáticamente desde DataStore
-
     val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
         bitmap?.let {
             try {
-                // Convertir bitmap a URI temporal para mostrar en la UI
                 val internalDir = context.filesDir
                 val imageFile = File(internalDir, "temp_image_${System.currentTimeMillis()}.jpg")
                 val outputStream = imageFile.outputStream()
@@ -106,7 +102,6 @@ fun ProductDetailScreen(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            // Permiso concedido, ahora intentar abrir la cámara
             try {
                 cameraLauncher.launch(null)
             } catch (e: Exception) {
@@ -123,18 +118,16 @@ fun ProductDetailScreen(
         if (isGranted) {
             galleryLauncher.launch("image/*")
         } else {
-            // Intentar con selector de archivos sin permisos específicos
             galleryLauncher.launch("image/*")
         }
     }
-
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFF7F3F8))
             .verticalScroll(rememberScrollState())
-            .padding(bottom = 16.dp) // Espacio al final para mejor scroll
+            .padding(bottom = 16.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(16.dp),
@@ -144,21 +137,47 @@ fun ProductDetailScreen(
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
             }
             Spacer(modifier = Modifier.width(8.dp))
-            Text("Celulares", style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold))
+            Text(product.tipo.ifBlank { "Detalle" }, style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold))
         }
         Spacer(modifier = Modifier.height(8.dp))
         Text(product.name, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold), modifier = Modifier.padding(horizontal = 16.dp))
         Text(product.description, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(horizontal = 16.dp))
         Text("$${product.price.toInt()} CLP", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = 16.dp))
         Spacer(modifier = Modifier.height(8.dp))
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-            repeat(4) {
-                Image(
-                    painter = painterResource(id = com.sibelsama.lovelyy5.R.drawable.ic_launcher_background),
-                    contentDescription = "Foto producto",
-                    modifier = Modifier.size(64.dp).clip(RoundedCornerShape(12.dp))
-                )
+        val imgs = productItem?.imagenes ?: emptyList()
+        if (imgs.isNotEmpty()) {
+            val page = remember { mutableStateOf(0) }
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(300.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .pointerInput(imgs) {
+                        detectHorizontalDragGestures(onHorizontalDrag = { change, dragAmount ->
+                            if (abs(dragAmount) > 20) {
+                                if (dragAmount < 0 && page.value < imgs.lastIndex) page.value = page.value + 1
+                                else if (dragAmount > 0 && page.value > 0) page.value = page.value - 1
+                                change.consume()
+                            }
+                        })
+                    }
+            ) {
+                ProductImage(imagePath = imgs[page.value], contentDescription = "${product.name} - ${page.value + 1}", modifier = Modifier.fillMaxSize())
             }
+
+            val thumbsToShow = imgs.drop(1).take(3)
+            if (thumbsToShow.isNotEmpty()) {
+                Row(modifier = Modifier.fillMaxWidth().padding(8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    thumbsToShow.forEachIndexed { idx, path ->
+                        val originalIndex = idx + 1
+                        Card(modifier = Modifier.size(72.dp).clickable { page.value = originalIndex }) {
+                            ProductImage(imagePath = path, contentDescription = "thumb_$originalIndex", modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(8.dp)))
+                        }
+                    }
+                }
+            }
+        } else {
+            ProductImage(imagePath = null, contentDescription = product.name, modifier = Modifier.fillMaxWidth().height(200.dp).clip(RoundedCornerShape(12.dp)))
         }
         Spacer(modifier = Modifier.height(8.dp))
         Button(onClick = {
@@ -183,10 +202,8 @@ fun ProductDetailScreen(
         OutlinedTextField(value = comment, onValueChange = { comment = it }, label = { Text("Opinión del producto") }, modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp))
         Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Button(onClick = {
-                // Verificar permiso de cámara antes de intentar usarla
                 when (PackageManager.PERMISSION_GRANTED) {
                     ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) -> {
-                        // Permiso ya concedido, abrir cámara
                         try {
                             cameraLauncher.launch(null)
                         } catch (e: Exception) {
@@ -194,7 +211,6 @@ fun ProductDetailScreen(
                         }
                     }
                     else -> {
-                        // Solicitar permiso
                         cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
                     }
                 }
@@ -202,13 +218,9 @@ fun ProductDetailScreen(
                 Text("📷 Cámara", color = Color.White)
             }
             Button(onClick = {
-                // En Android 13+ (API 33+), usar selector de medios visual
-                // En versiones anteriores, verificar permisos de almacenamiento
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-                    // Android 13+ - usar selector de medios granular
                     galleryLauncher.launch("image/*")
                 } else {
-                    // Android 12 y anteriores - verificar permisos de almacenamiento
                     when (PackageManager.PERMISSION_GRANTED) {
                         ContextCompat.checkSelfPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE) -> {
                             galleryLauncher.launch("image/*")
@@ -285,19 +297,15 @@ fun ProductDetailScreen(
                         imageUris = images.map { it.toString() }
                     )
 
-                    // Actualizar SOLO el estado estático local - no más reactividad
                     reviews = reviews + newReview
 
-                    // Guardar en el repositorio
                     reviewViewModel.saveReview(newReview)
 
-                    // Limpiar el formulario después de guardar
                     name = ""
                     comment = ""
                     rating = 1
                     images = emptyList()
 
-                    // Mostrar mensaje de confirmación
                     Toast.makeText(context, "¡Valoración guardada exitosamente!", Toast.LENGTH_LONG).show()
                 } else {
                     Toast.makeText(context, "Por favor complete el nombre y el comentario", Toast.LENGTH_SHORT).show()
@@ -320,7 +328,6 @@ fun ProductDetailScreen(
             Text("(${reviews.size})", style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
         }
 
-        // Log de debug para verificar que no hay recomposiciones innecesarias
         android.util.Log.d("ProductDetailScreen", "Rendering reviews section with ${reviews.size} reviews - Static: $reviewsLoaded")
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -390,7 +397,6 @@ fun ProductDetailScreen(
             }
         }
 
-        // Espacio final para que el usuario pueda hacer scroll más cómodamente
         Spacer(modifier = Modifier.height(32.dp))
     }
 }

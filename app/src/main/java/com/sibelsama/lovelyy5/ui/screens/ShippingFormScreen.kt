@@ -138,7 +138,7 @@ fun ShippingFormScreen(
                             val vibrator = context.getSystemService(Vibrator::class.java)
                             vibrator?.vibrate(VibrationEffect.createOneShot(2000, VibrationEffect.DEFAULT_AMPLITUDE))
                             if (validateForm()) {
-                                onSubmit(ShippingDetails(rut = rut, names = names, lastNames = lastNames, phone = phone, email = email, address = address, region = selectedRegion))
+                                onSubmit(ShippingDetails(rut = rut, names = names, lastNames = lastNames, phone = phone, email = email, address = address, region = selectedRegion, comuna = ""))
                             } else {
                                 showError = true
                             }
@@ -151,7 +151,7 @@ fun ShippingFormScreen(
                 Column(modifier = Modifier
                     .fillMaxSize()
                     .padding(16.dp)) {
-                    OutlinedTextField(value = rut, onValueChange = { rut = it }, label = { Text("RUT (XX.XXX.XXX-X)") }, isError = showError && !validateRut(rut), modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(value = rut, onValueChange = { rut = it }, label = { Text("RUT (XXXXXXXX-X)") }, isError = showError && !validateRut(rut), modifier = Modifier.fillMaxWidth())
                     OutlinedTextField(value = names, onValueChange = { names = it }, label = { Text("Nombres") }, modifier = Modifier.fillMaxWidth())
                     OutlinedTextField(value = lastNames, onValueChange = { lastNames = it }, label = { Text("Apellidos") }, modifier = Modifier.fillMaxWidth())
                     OutlinedTextField(value = phone, onValueChange = { phone = it }, label = { Text("Teléfono (+56999999999)") }, isError = showError && !validatePhone(phone), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone), modifier = Modifier.fillMaxWidth())

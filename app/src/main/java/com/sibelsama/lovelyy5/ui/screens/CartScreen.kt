@@ -15,30 +15,29 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sibelsama.lovelyy5.R
-import com.sibelsama.lovelyy5.model.Product
-import com.sibelsama.lovelyy5.ui.theme.LovelyY5APPTheme
+import com.sibelsama.lovelyy5.ui.viewmodels.RegionsViewModel
+import com.sibelsama.lovelyy5.model.Order
 import androidx.compose.ui.platform.LocalContext
 import android.os.VibrationEffect
 import android.os.Vibrator
 import com.sibelsama.lovelyy5.ui.viewmodels.CartViewModel
 import androidx.compose.material3.AlertDialog
 import androidx.compose.ui.text.input.TextFieldValue
-import com.sibelsama.lovelyy5.model.Order
 import com.sibelsama.lovelyy5.model.ShippingDetails
 import com.sibelsama.lovelyy5.ui.viewmodels.OrderViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 @SuppressLint("MissingPermission")
 fun CartScreen(
     onClearCart: () -> Unit,
     onBackClick: () -> Unit = {},
-    onPurchaseCompleted: (com.sibelsama.lovelyy5.model.Order) -> Unit = {},
+    onPurchaseCompleted: (Order) -> Unit = {},
     cartViewModel: CartViewModel = viewModel()
 ) {
     val cartItems by cartViewModel.cartItems.collectAsState()
@@ -58,6 +57,32 @@ fun CartScreen(
     var email by remember { mutableStateOf(TextFieldValue("")) }
     var address by remember { mutableStateOf(TextFieldValue("")) }
     var region by remember { mutableStateOf(TextFieldValue("")) }
+    var comuna by remember { mutableStateOf(TextFieldValue("")) }
+
+    // Cargar regiones y comunas desde ViewModel (assets/regions.json)
+    val regionsVm: RegionsViewModel = viewModel()
+    val regionsList by regionsVm.regions.collectAsState()
+    // Fallback: si regionsList está vacío, intentar cargar directamente desde repository una vez
+    val loadedRegionsState = remember { mutableStateOf<List<com.sibelsama.lovelyy5.data.RegionEntry>>(regionsList) }
+    LaunchedEffect(regionsList) {
+        if (regionsList.isNotEmpty()) {
+            loadedRegionsState.value = regionsList
+        } else {
+            // intentar cargar directamente
+            try {
+                val repo = com.sibelsama.lovelyy5.data.RegionsRepository(context)
+                val loaded = repo.loadRegions()
+                if (loaded.isNotEmpty()) loadedRegionsState.value = loaded
+            } catch (e: Exception) {
+                android.util.Log.e("CartScreen", "Error loading regions fallback: ${e.message}")
+            }
+        }
+    }
+
+    val regions = loadedRegionsState.value.map { it.name }
+
+    var regionExpanded by remember { mutableStateOf(false) }
+    var comunaExpanded by remember { mutableStateOf(false) }
 
     // Tarifa de envío fija para ejemplo
     val shippingCost = 5000.0
@@ -178,11 +203,33 @@ fun CartScreen(
         AlertDialog(
             onDismissRequest = { showShippingForm = false },
             confirmButton = {
+                // Habilitar solo si region y comuna seleccionadas
+                val canConfirm = region.text.isNotBlank() && comuna.text.isNotBlank()
                 TextButton(onClick = {
                     // Validar campos mínimos
                     if (names.text.isBlank() || lastNames.text.isBlank() || phone.text.isBlank() || address.text.isBlank()) {
-                        // mostrar un simple toast
                         android.widget.Toast.makeText(context, "Por favor completa los datos de envío", android.widget.Toast.LENGTH_SHORT).show()
+                        return@TextButton
+                    }
+
+                    // Validaciones puntuales
+                    val rutRegex = Regex("^[0-9]{7,8}-[0-9Kk]$")
+                    if (!rut.text.matches(rutRegex)) {
+                        android.widget.Toast.makeText(context, "RUT inválido. Formato ejemplo: 12345678-K", android.widget.Toast.LENGTH_SHORT).show()
+                        return@TextButton
+                    }
+                    val phoneRegex = Regex("^9[0-9]{8}$")
+                    if (!phone.text.matches(phoneRegex)) {
+                        android.widget.Toast.makeText(context, "Teléfono inválido. Debe comenzar con 9 y tener 9 dígitos por ejemplo 912345678", android.widget.Toast.LENGTH_SHORT).show()
+                        return@TextButton
+                    }
+                    val emailRegex = Regex("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}")
+                    if (email.text.isNotBlank() && !email.text.matches(emailRegex)) {
+                        android.widget.Toast.makeText(context, "Correo inválido", android.widget.Toast.LENGTH_SHORT).show()
+                        return@TextButton
+                    }
+                    if (region.text.isBlank() || comuna.text.isBlank()) {
+                        android.widget.Toast.makeText(context, "Selecciona región y comuna", android.widget.Toast.LENGTH_SHORT).show()
                         return@TextButton
                     }
 
@@ -194,13 +241,16 @@ fun CartScreen(
                         phone = phone.text,
                         email = email.text,
                         address = address.text,
-                        region = region.text
+                        region = region.text,
+                        comuna = comuna.text
                     )
 
                     // Crear ID de pedido basado en timestamp
                     val id = SimpleDateFormat("yyyyMMddHHmmss", Locale.getDefault()).format(Date())
 
-                    val itemsMap = cartItems.entries.associate { (product, qty) -> product.id to qty }
+                    // Tomar snapshot actual de cartItems para asegurar coincidencia
+                    val snapshot = cartViewModel.cartItems.value
+                    val itemsMap = snapshot.entries.associate { (product, qty) -> product.id to qty }
                     val total = subtotal + shippingCost
 
                     val order = Order(
@@ -228,7 +278,7 @@ fun CartScreen(
 
                     // Notificar al NavGraph con el order creado para navegar al detalle inmediatamente
                     onPurchaseCompleted(order)
-                }) {
+                }, enabled = canConfirm) {
                     Text("Confirmar compra")
                 }
             },
@@ -244,81 +294,84 @@ fun CartScreen(
                     OutlinedTextField(value = phone, onValueChange = { phone = it }, label = { Text("Teléfono") }, modifier = Modifier.fillMaxWidth())
                     OutlinedTextField(value = email, onValueChange = { email = it }, label = { Text("Correo") }, modifier = Modifier.fillMaxWidth())
                     OutlinedTextField(value = address, onValueChange = { address = it }, label = { Text("Dirección") }, modifier = Modifier.fillMaxWidth())
-                    OutlinedTextField(value = region, onValueChange = { region = it }, label = { Text("Región") }, modifier = Modifier.fillMaxWidth())
+
+                    Spacer(modifier = Modifier.height(8.dp))
+                    // Region select
+                    ExposedDropdownMenuBox(expanded = regionExpanded, onExpandedChange = { regionExpanded = !regionExpanded }) {
+                        OutlinedTextField(
+                            value = region.text,
+                            onValueChange = {},
+                            label = { Text("Región") },
+                            readOnly = true,
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = regionExpanded) },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        ExposedDropdownMenu(expanded = regionExpanded, onDismissRequest = { regionExpanded = false }) {
+                            if (regions.isEmpty()) {
+                                DropdownMenuItem(text = { Text("Cargando regiones...") }, onClick = { /* no-op */ })
+                            } else {
+                                regions.forEach { r ->
+                                    DropdownMenuItem(text = { Text(r) }, onClick = {
+                                        region = TextFieldValue(r)
+                                        regionExpanded = false
+                                        // reset comuna when region changes
+                                        comuna = TextFieldValue("")
+                                    })
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+                    // Comuna select basado en region: deshabilitado hasta seleccionar región
+                    val regionSelected = region.text.isNotBlank()
+                    val comunasOpciones = if (regionSelected) {
+                        // usar loadedRegionsState para asegurar fallback
+                        loadedRegionsState.value.find { it.name == region.text }?.comunas ?: emptyList()
+                    } else emptyList()
+
+                    ExposedDropdownMenuBox(expanded = comunaExpanded, onExpandedChange = {
+                        if (regionSelected) comunaExpanded = !comunaExpanded else {
+                            // Indicar al usuario que necesita seleccionar región primero
+                            android.widget.Toast.makeText(context, "Selecciona una región primero", android.widget.Toast.LENGTH_SHORT).show()
+                        }
+                    }) {
+                        OutlinedTextField(
+                            value = comuna.text,
+                            onValueChange = {},
+                            label = { Text("Comuna") },
+                            placeholder = { if (!regionSelected) Text("Selecciona una región primero") },
+                            readOnly = true,
+                            enabled = regionSelected,
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = comunaExpanded) },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        ExposedDropdownMenu(expanded = comunaExpanded, onDismissRequest = { comunaExpanded = false }) {
+                            if (!regionSelected) {
+                                DropdownMenuItem(text = { Text("Selecciona una región primero") }, onClick = { /* no-op */ })
+                            } else {
+                                comunasOpciones.forEach { c ->
+                                    DropdownMenuItem(text = { Text(c) }, onClick = {
+                                        comuna = TextFieldValue(c)
+                                        comunaExpanded = false
+                                    })
+                                }
+                            }
+                        }
+                    }
                 }
             }
         )
-    }
 
-    if (showSuccessDialog) {
-        AlertDialog(
-            onDismissRequest = { showSuccessDialog = false },
-            title = { Text("Compra efectuada correctamente! <3") },
-            confirmButton = {
-                TextButton(onClick = {
-                    showSuccessDialog = false
-                    // ya navegó vía onPurchaseCompleted, solo cerrar dialogo
-                }) {
-                    Text("OK")
+        // Dialogo de éxito
+        if (showSuccessDialog) {
+            AlertDialog(
+                onDismissRequest = { showSuccessDialog = false },
+                title = { Text("Compra efectuada correctamente! <3") },
+                confirmButton = {
+                    TextButton(onClick = { showSuccessDialog = false }) { Text("OK") }
                 }
-            }
-        )
-    }
-}
-
-@Suppress("unused")
-@Composable
-fun CartItem(
-    product: Product,
-    quantity: Int,
-    onQuantityChange: (Int) -> Unit,
-    onRemove: () -> Unit
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-    ) {
-        Row(
-            modifier = Modifier.padding(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.ic_launcher_background), // Placeholder
-                contentDescription = product.name,
-                modifier = Modifier
-                    .size(80.dp)
-                    .clip(RoundedCornerShape(8.dp))
             )
-            Spacer(modifier = Modifier.width(16.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(text = product.name, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
-                Text(text = "$${product.price.toInt()} CLP", style = MaterialTheme.typography.bodyMedium)
-            }
-            Spacer(modifier = Modifier.width(16.dp))
-            Column(horizontalAlignment = Alignment.End) {
-                 IconButton(onClick = onRemove, modifier = Modifier.size(24.dp)) {
-                    Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = MaterialTheme.colorScheme.error)
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    IconButton(onClick = { if (quantity > 1) onQuantityChange(quantity - 1) else onRemove() }, modifier = Modifier.size(24.dp)) {
-                        Icon(Icons.Default.Remove, contentDescription = "Quitar uno")
-                    }
-                    Text(text = quantity.toString(), style = MaterialTheme.typography.bodyLarge)
-                    IconButton(onClick = { onQuantityChange(quantity + 1) }, modifier = Modifier.size(24.dp)) {
-                        Icon(Icons.Default.Add, contentDescription = "Añadir uno")
-                    }
-                }
-            }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun CartScreenPreview() {
-    LovelyY5APPTheme {
-        CartScreen(onClearCart = {}, onPurchaseCompleted = {})
     }
 }

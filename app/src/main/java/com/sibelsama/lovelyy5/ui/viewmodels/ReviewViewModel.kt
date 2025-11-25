@@ -13,7 +13,6 @@ import kotlinx.coroutines.launch
 class ReviewViewModel(application: Application) : AndroidViewModel(application) {
     private val repository = ReviewRepository(application.applicationContext)
 
-    // Cachear StateFlows por productId para evitar crear uno nuevo en cada getReviews()
     private val reviewFlows: MutableMap<Int, StateFlow<List<ProductReview>>> = mutableMapOf()
 
     fun getReviews(productId: Int): StateFlow<List<ProductReview>> {
