@@ -1,11 +1,15 @@
 package com.sibelsama.lovelyy5.ui.screens
 
-import android.annotation.SuppressLint
 import android.os.VibrationEffect
 import android.os.Vibrator
 import androidx.compose.foundation.clickable
+import com.sibelsama.lovelyy5.utils.PermissionManager
+import com.sibelsama.lovelyy5.data.DataManager
+import kotlinx.coroutines.launch
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -17,11 +21,11 @@ import androidx.compose.ui.unit.dp
 import com.sibelsama.lovelyy5.model.ShippingDetails
 
 @OptIn(ExperimentalMaterial3Api::class)
-@SuppressLint("MissingPermission")
 @Composable
 fun ShippingFormScreen(
     onSubmit: (ShippingDetails) -> Unit,
-    onCancel: () -> Unit
+    onCancel: () -> Unit,
+    onBack: () -> Unit = {}
 ) {
     var rut by remember { mutableStateOf("") }
     var names by remember { mutableStateOf("") }
@@ -46,6 +50,35 @@ fun ShippingFormScreen(
     var showError by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
     val context = LocalContext.current
+    val dataManager = remember { DataManager(context) }
+    val scope = rememberCoroutineScope()
+
+    // Función para vibrar de forma segura
+    fun safeVibrate(duration: Long = 50, amplitude: Int = VibrationEffect.EFFECT_TICK) {
+        if (PermissionManager.canVibrate(context)) {
+            try {
+                val vibrator = context.getSystemService(Vibrator::class.java)
+                vibrator?.vibrate(VibrationEffect.createOneShot(duration, amplitude))
+        } catch (_: Exception) {
+            // Manejo silencioso del error
+        }
+        }
+    }
+
+    // Cargar datos previos si existen
+    LaunchedEffect(Unit) {
+        dataManager.shippingDetails.collect { savedDetails ->
+            savedDetails?.let {
+                rut = it.rut
+                names = it.names
+                lastNames = it.lastNames
+                phone = it.phone
+                email = it.email
+                address = it.address
+                selectedRegion = it.region
+            }
+        }
+    }
 
     // Validaciones
     fun validateRut(rut: String): Boolean {
@@ -86,7 +119,16 @@ fun ShippingFormScreen(
     }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Datos de Envío", fontWeight = FontWeight.Bold) }) }
+        topBar = {
+            TopAppBar(
+                title = { Text("Datos de Envío", fontWeight = FontWeight.Bold) },
+                navigationIcon = {
+                    IconButton(onClick = { onBack() }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                    }
+                }
+            )
+        }
     ) { innerPadding ->
         Box(modifier = Modifier
             .fillMaxSize()
@@ -123,22 +165,23 @@ fun ShippingFormScreen(
 
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                         Button(onClick = {
-                            val vibrator = context.getSystemService(Vibrator::class.java)
-                            vibrator?.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.EFFECT_TICK))
+                            safeVibrate()
                             editing = true
                         }, modifier = Modifier.weight(1f)) { Text("Editar") }
 
                         Button(onClick = {
-                            val vibrator = context.getSystemService(Vibrator::class.java)
-                            vibrator?.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.EFFECT_TICK))
+                            safeVibrate()
                             onCancel()
                         }, modifier = Modifier.weight(1f), colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)) { Text("Eliminar") }
 
                         Button(onClick = {
-                            val vibrator = context.getSystemService(Vibrator::class.java)
-                            vibrator?.vibrate(VibrationEffect.createOneShot(2000, VibrationEffect.DEFAULT_AMPLITUDE))
+                            safeVibrate(2000, VibrationEffect.DEFAULT_AMPLITUDE)
                             if (validateForm()) {
-                                onSubmit(ShippingDetails(rut = rut, names = names, lastNames = lastNames, phone = phone, email = email, address = address, region = selectedRegion))
+                                val shippingDetails = ShippingDetails(rut = rut, names = names, lastNames = lastNames, phone = phone, email = email, address = address, region = selectedRegion)
+                                scope.launch {
+                                    dataManager.saveShippingDetails(shippingDetails)
+                                }
+                                onSubmit(shippingDetails)
                             } else {
                                 showError = true
                             }
@@ -178,14 +221,12 @@ fun ShippingFormScreen(
 
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                         Button(onClick = {
-                            val vibrator = context.getSystemService(Vibrator::class.java)
-                            vibrator?.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.EFFECT_TICK))
+                            safeVibrate()
                             editing = false
                         }, modifier = Modifier.weight(1f)) { Text("Guardar cambios") }
 
                         Button(onClick = {
-                            val vibrator = context.getSystemService(Vibrator::class.java)
-                            vibrator?.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.EFFECT_TICK))
+                            safeVibrate()
                             onCancel()
                         }, modifier = Modifier.weight(1f), colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)) { Text("Eliminar") }
                     }

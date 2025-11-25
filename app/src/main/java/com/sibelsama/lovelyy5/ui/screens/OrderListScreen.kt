@@ -4,11 +4,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -21,15 +19,21 @@ import com.sibelsama.lovelyy5.ui.components.AppHeader
 import com.sibelsama.lovelyy5.ui.theme.LovelyY5APPTheme
 
 @Composable
-fun OrderListScreen(orders: List<Order>, onOrderClick: (String) -> Unit, onSeeProducts: () -> Unit = {}) {
+fun OrderListScreen(orders: List<Order>, onOrderClick: (String) -> Unit, onSeeProducts: () -> Unit = {}, onBack: () -> Unit = {}) {
     Column(modifier = Modifier.fillMaxSize()) {
-        AppHeader()
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = "Mis Pedidos",
-            style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-            modifier = Modifier.padding(horizontal = 16.dp)
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = { onBack() }) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+            }
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "Mis Pedidos",
+                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
+            )
+        }
         if (orders.isEmpty()) {
             Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -90,6 +94,6 @@ fun OrderListScreenPreview() {
         )
     )
     LovelyY5APPTheme {
-        OrderListScreen(orders = dummyOrders, onOrderClick = {}, onSeeProducts = {})
+        OrderListScreen(orders = dummyOrders, onOrderClick = {}, onSeeProducts = {}, onBack = {})
     }
 }

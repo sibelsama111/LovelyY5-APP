@@ -68,7 +68,6 @@ fun ProductListScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = { onBack() }) {
-                @Suppress("DEPRECATION")
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
             }
             Spacer(modifier = Modifier.width(8.dp))

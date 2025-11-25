@@ -28,7 +28,14 @@ private val DarkColorScheme = darkColorScheme(
     onBackground = Color(0xFFFFFFFF), // white
     onSurface = Color(0xFFFFFFFF), // white
     error = Color(0xFFFF0000), // red
-    onError = Color(0xFFFFFFFF)
+    onError = Color(0xFFFFFFFF),
+    // Colores adicionales para la app
+    primaryContainer = Color(0xFFB36AE2), // purple theme color
+    onPrimaryContainer = Color(0xFFFFFFFF),
+    secondaryContainer = Color(0xFF3A2F3F), // dark background variant
+    onSecondaryContainer = Color(0xFFFFFFFF),
+    errorContainer = Color(0xFF4CAF50), // success green
+    onErrorContainer = Color(0xFFFFFFFF)
 )
 
 private val LightColorScheme = lightColorScheme(
@@ -43,7 +50,14 @@ private val LightColorScheme = lightColorScheme(
     onBackground = Color(0xFF260303), // ebano
     onSurface = Color(0xFF260303), // ebano
     error = Color(0xFFFF0000), // red
-    onError = Color(0xFFFFFFFF)
+    onError = Color(0xFFFFFFFF),
+    // Colores adicionales para la app
+    primaryContainer = Color(0xFFB36AE2), // purple theme color
+    onPrimaryContainer = Color(0xFFFFFFFF),
+    secondaryContainer = Color(0xFFF7F3F8), // light background
+    onSecondaryContainer = Color(0xFF260303),
+    errorContainer = Color(0xFF4CAF50), // success green
+    onErrorContainer = Color(0xFFFFFFFF)
 )
 
 @Composable

@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import coil.compose.rememberAsyncImagePainter
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.layout.ContentScale
@@ -46,8 +47,17 @@ fun ProductCard(product: Product, onProductClick: (Product) -> Unit, onAddToCart
             ) { onProductClick(product) }
     ) {
         Column {
+            val imagePainter = if (product.images.isNotEmpty()) {
+                coil.compose.rememberAsyncImagePainter(
+                    model = product.images[0],
+                    error = painterResource(id = R.drawable.ic_launcher_background)
+                )
+            } else {
+                painterResource(id = R.drawable.ic_launcher_background)
+            }
+
             Image(
-                painter = painterResource(id = R.drawable.ic_launcher_background), // Reemplazar con la imagen del producto
+                painter = imagePainter,
                 contentDescription = product.name,
                 modifier = Modifier
                     .height(120.dp)
