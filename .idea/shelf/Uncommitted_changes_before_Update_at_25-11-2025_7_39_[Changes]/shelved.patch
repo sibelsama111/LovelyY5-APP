@@ -1,0 +1,11 @@
+Index: tools/clean_comments.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/tools/clean_comments.py b/tools/clean_comments.py
+new file mode 100644
+--- /dev/null	(date 1764067102205)
++++ b/tools/clean_comments.py	(date 1764067102205)
+@@ -0,0 +1,1 @@
++
