@@ -1,7 +1,7 @@
 package com.sibelsama.lovelyy5.ui.screens
 
 import android.annotation.SuppressLint
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.*
 import androidx.compose.foundation.verticalScroll
@@ -11,14 +11,13 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.sibelsama.lovelyy5.R
 import com.sibelsama.lovelyy5.ui.viewmodels.RegionsViewModel
+import com.sibelsama.lovelyy5.ui.viewmodels.ProductViewModel
 import com.sibelsama.lovelyy5.model.Order
 import androidx.compose.ui.platform.LocalContext
 import android.os.VibrationEffect
@@ -45,6 +44,7 @@ fun CartScreen(
 
     val context = LocalContext.current
     val orderViewModel: OrderViewModel = viewModel()
+    val productVm: ProductViewModel = viewModel()
 
     var showShippingForm by remember { mutableStateOf(false) }
     var showSuccessDialog by remember { mutableStateOf(false) }
@@ -131,21 +131,22 @@ fun CartScreen(
                             modifier = Modifier.padding(8.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Image(
-                                painter = painterResource(id = R.drawable.ic_launcher_background),
-                                contentDescription = product.name,
-                                modifier = Modifier.size(48.dp).clip(RoundedCornerShape(8.dp))
-                            )
+                            val prodItem = productVm.products.collectAsState().value.find { it.id == product.id }
+                            ProductImage(imagePath = prodItem?.imagenes?.firstOrNull(), contentDescription = product.name, modifier = Modifier.size(48.dp).clip(RoundedCornerShape(8.dp)))
                             Spacer(modifier = Modifier.width(8.dp))
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(product.name, style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold))
-                                Text(product.description, style = MaterialTheme.typography.bodySmall)
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                    Text("x $qty unidades", style = MaterialTheme.typography.bodyMedium)
+                                    Text("$${product.price.toInt()} CLP", style = MaterialTheme.typography.bodyMedium)
+                                }
                             }
-                            Row(verticalAlignment = Alignment.CenterVertically) {
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column {
                                 IconButton(onClick = { if (qty > 1) cartViewModel.updateQuantity(product, qty - 1) else cartViewModel.removeFromCart(product) }) {
                                     Icon(Icons.Default.Remove, contentDescription = "Quitar uno")
                                 }
-                                Text(qty.toString(), style = MaterialTheme.typography.bodyLarge)
                                 IconButton(onClick = { cartViewModel.updateQuantity(product, qty + 1) }) {
                                     Icon(Icons.Default.Add, contentDescription = "Añadir uno")
                                 }
@@ -162,6 +163,22 @@ fun CartScreen(
                 ) {
                     Text("Subtotal:", style = MaterialTheme.typography.bodyMedium)
                     Text("$${subtotal.toInt()} CLP", style = MaterialTheme.typography.bodyMedium)
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text("Tarifa de envío:", style = MaterialTheme.typography.bodyMedium)
+                    Text("$${shippingCost.toInt()} CLP", style = MaterialTheme.typography.bodyMedium)
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text("Total:", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
+                    Text("$${(subtotal + shippingCost).toInt()} CLP", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
                 }
             }
 
@@ -296,25 +313,25 @@ fun CartScreen(
                     OutlinedTextField(value = address, onValueChange = { address = it }, label = { Text("Dirección") }, modifier = Modifier.fillMaxWidth())
 
                     Spacer(modifier = Modifier.height(8.dp))
-                    // Region select
-                    ExposedDropdownMenuBox(expanded = regionExpanded, onExpandedChange = { regionExpanded = !regionExpanded }) {
+                    val regionSelected = region.text.isNotBlank()
+                    val comunasOpciones = if (regionSelected) loadedRegionsState.value.find { it.name == region.text }?.comunas ?: emptyList() else emptyList()
+                    Box(modifier = Modifier.fillMaxWidth()) {
                         OutlinedTextField(
                             value = region.text,
                             onValueChange = {},
                             label = { Text("Región") },
                             readOnly = true,
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = regionExpanded) },
-                            modifier = Modifier.fillMaxWidth()
+                            trailingIcon = { IconButton(onClick = { regionExpanded = !regionExpanded }) { Icon(Icons.Default.ArrowDropDown, contentDescription = null) } },
+                            modifier = Modifier.fillMaxWidth().clickable { regionExpanded = !regionExpanded }
                         )
-                        ExposedDropdownMenu(expanded = regionExpanded, onDismissRequest = { regionExpanded = false }) {
+                        DropdownMenu(expanded = regionExpanded, onDismissRequest = { regionExpanded = false }) {
                             if (regions.isEmpty()) {
-                                DropdownMenuItem(text = { Text("Cargando regiones...") }, onClick = { /* no-op */ })
+                                DropdownMenuItem(text = { Text("Cargando regiones...") }, onClick = { })
                             } else {
                                 regions.forEach { r ->
                                     DropdownMenuItem(text = { Text(r) }, onClick = {
                                         region = TextFieldValue(r)
                                         regionExpanded = false
-                                        // reset comuna when region changes
                                         comuna = TextFieldValue("")
                                     })
                                 }
@@ -323,32 +340,20 @@ fun CartScreen(
                     }
 
                     Spacer(modifier = Modifier.height(8.dp))
-                    // Comuna select basado en region: deshabilitado hasta seleccionar región
-                    val regionSelected = region.text.isNotBlank()
-                    val comunasOpciones = if (regionSelected) {
-                        // usar loadedRegionsState para asegurar fallback
-                        loadedRegionsState.value.find { it.name == region.text }?.comunas ?: emptyList()
-                    } else emptyList()
-
-                    ExposedDropdownMenuBox(expanded = comunaExpanded, onExpandedChange = {
-                        if (regionSelected) comunaExpanded = !comunaExpanded else {
-                            // Indicar al usuario que necesita seleccionar región primero
-                            android.widget.Toast.makeText(context, "Selecciona una región primero", android.widget.Toast.LENGTH_SHORT).show()
-                        }
-                    }) {
+                    Box(modifier = Modifier.fillMaxWidth()) {
                         OutlinedTextField(
                             value = comuna.text,
                             onValueChange = {},
                             label = { Text("Comuna") },
-                            placeholder = { if (!regionSelected) Text("Selecciona una región primero") },
+                            placeholder = { if (!regionSelected) Text("Selecciona una región primero") else null },
                             readOnly = true,
                             enabled = regionSelected,
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = comunaExpanded) },
-                            modifier = Modifier.fillMaxWidth()
+                            trailingIcon = { IconButton(onClick = { if (regionSelected) comunaExpanded = !comunaExpanded else android.widget.Toast.makeText(context, "Selecciona una región primero", android.widget.Toast.LENGTH_SHORT).show() }) { Icon(Icons.Default.ArrowDropDown, contentDescription = null) } },
+                            modifier = Modifier.fillMaxWidth().clickable(enabled = regionSelected) { if (regionSelected) comunaExpanded = !comunaExpanded else android.widget.Toast.makeText(context, "Selecciona una región primero", android.widget.Toast.LENGTH_SHORT).show() }
                         )
-                        ExposedDropdownMenu(expanded = comunaExpanded, onDismissRequest = { comunaExpanded = false }) {
+                        DropdownMenu(expanded = comunaExpanded, onDismissRequest = { comunaExpanded = false }) {
                             if (!regionSelected) {
-                                DropdownMenuItem(text = { Text("Selecciona una región primero") }, onClick = { /* no-op */ })
+                                DropdownMenuItem(text = { Text("Selecciona una región primero") }, onClick = { })
                             } else {
                                 comunasOpciones.forEach { c ->
                                     DropdownMenuItem(text = { Text(c) }, onClick = {

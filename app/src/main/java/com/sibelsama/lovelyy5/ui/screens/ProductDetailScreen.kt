@@ -125,7 +125,7 @@ fun ProductDetailScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF7F3F8))
+            .background(MaterialTheme.colorScheme.background)
             .verticalScroll(rememberScrollState())
             .padding(bottom = 16.dp)
     ) {
@@ -187,7 +187,7 @@ fun ProductDetailScreen(
                 onAddToCart()
             },
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFB36AE2))
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
         ) {
             Text("Añadir al carrito", color = Color.White)
         }
@@ -214,7 +214,7 @@ fun ProductDetailScreen(
                         cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
                     }
                 }
-            }, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))) {
+            }, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
                 Text("📷 Cámara", color = Color.White)
             }
             Button(onClick = {
@@ -230,8 +230,8 @@ fun ProductDetailScreen(
                         }
                     }
                 }
-            }, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2196F3))) {
-                Text("🖼️ Galería", color = Color.White)
+            }, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)) {
+                Text("🖼️ Galería", color = MaterialTheme.colorScheme.onSecondary)
             }
         }
         if (images.isNotEmpty()) {
@@ -274,11 +274,11 @@ fun ProductDetailScreen(
         }
         Row(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = { if (rating > 1) rating-- }) {
-                Icon(Icons.Default.Star, contentDescription = "Menos estrella", tint = if (rating > 1) Color(0xFFB36AE2) else Color.Gray)
+                Icon(Icons.Default.Star, contentDescription = "Menos estrella", tint = if (rating > 1) MaterialTheme.colorScheme.primary else Color.Gray)
             }
             Text("$rating", style = MaterialTheme.typography.bodyLarge)
             IconButton(onClick = { if (rating < 5) rating++ }) {
-                Icon(Icons.Default.Star, contentDescription = "Más estrella", tint = if (rating < 5) Color(0xFFB36AE2) else Color.Gray)
+                Icon(Icons.Default.Star, contentDescription = "Más estrella", tint = if (rating < 5) MaterialTheme.colorScheme.primary else Color.Gray)
             }
             Text("Estrellas", style = MaterialTheme.typography.bodyMedium)
         }
@@ -312,9 +312,9 @@ fun ProductDetailScreen(
                 }
             },
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFB36AE2))
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
         ) {
-            Text("Valorar Producto", color = Color.White)
+            Text("Valorar Producto", color = MaterialTheme.colorScheme.onPrimary)
         }
         Spacer(modifier = Modifier.height(24.dp))
         HorizontalDivider()

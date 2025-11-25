@@ -101,13 +101,18 @@ fun HomeScreen(
 
         Text("Sobre Nosotros <3", style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold))
         Spacer(modifier = Modifier.height(8.dp))
-        Text("Lovely Y5 se dedica a... (texto resumido)", style = MaterialTheme.typography.bodyMedium)
+        Text(
+            text = """
+                Lovely Y5 nació para unir experiencia técnica y trato humano. Ofrecemos venta de dispositivos y servicio técnico con énfasis en diagnóstico riguroso, soluciones duraderas y comunicación clara. Nuestro equipo, formado por profesionales y estudiantes avanzados de Ingeniería Informática, aplica conocimientos actuales para resolver problemas reales: no reemplazamos piezas sin investigar la causa, optimizamos rendimiento y priorizamos la confiabilidad. Creemos en la cercanía: una paleta amable, lenguaje sencillo y soporte cercano para que la tecnología sea accesible y comprensible. Lovely Y5 combina la agilidad de una tienda online con la atención personalizada de un local, respaldada por prácticas profesionales y ética. Nuestro compromiso es ofrecer productos verificados, asesoría honesta y un servicio técnico que realmente funcione. Gracias por confiar en nosotros: elegimos mejorar cada día para darte soluciones útiles, confiables y con visión de futuro.
+            """.trimIndent(),
+            style = MaterialTheme.typography.bodyMedium
+        )
 
         Spacer(modifier = Modifier.height(16.dp))
 
         // Banner placeholder: deja esta URL para que pegues la imagen en assets/images/banner.png
         Box(modifier = Modifier.fillMaxWidth().height(160.dp)) {
-            AsyncImage(model = "file:///android_asset/images/banner.png", contentDescription = "Banner", modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+            AsyncImage(model = "file:///android_asset/images/banner_sobre_nos.png", contentDescription = "Banner Sobre Nosotros", modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
         }
 
         Spacer(modifier = Modifier.height(24.dp))

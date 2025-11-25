@@ -19,7 +19,6 @@ import com.sibelsama.lovelyy5.model.Order
 import com.sibelsama.lovelyy5.model.Product
 import com.sibelsama.lovelyy5.model.ShippingDetails
 import com.sibelsama.lovelyy5.ui.theme.LovelyY5APPTheme
-import androidx.compose.ui.graphics.Color
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material.icons.Icons
@@ -42,7 +41,7 @@ fun OrderDetailScreen(order: Order, onBackClick: () -> Unit = {}) {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF7F3F8)),
+            .background(MaterialTheme.colorScheme.background),
         contentPadding = PaddingValues(16.dp)
     ) {
         item {
@@ -82,7 +81,7 @@ fun OrderDetailScreen(order: Order, onBackClick: () -> Unit = {}) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 6.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                 shape = RoundedCornerShape(8.dp)
             ) {
@@ -91,20 +90,20 @@ fun OrderDetailScreen(order: Order, onBackClick: () -> Unit = {}) {
                     Box(modifier = Modifier
                         .size(64.dp)
                         .clip(RoundedCornerShape(6.dp))
-                        .background(Color(0xFFF0E8F5)), contentAlignment = Alignment.Center) {
+                        .background(MaterialTheme.colorScheme.secondaryContainer), contentAlignment = Alignment.Center) {
                         ProductImage(imagePath = pItem?.imagenes?.firstOrNull(), contentDescription = "img", modifier = Modifier.size(48.dp))
                     }
                     Spacer(modifier = Modifier.width(12.dp))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(text = product?.name ?: "Producto #$productId", style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold))
-                        Text(text = product?.description ?: "-", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                        Text(text = product?.description ?: "-", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
                     }
                     Column(horizontalAlignment = Alignment.End) {
                         Text(text = "x $quantity unidades", style = MaterialTheme.typography.bodySmall)
                         Spacer(modifier = Modifier.height(4.dp))
                         val unitPrice = product?.price ?: 0.0
                         Text(text = "$${unitPrice.toInt()} CLP", style = MaterialTheme.typography.bodyMedium)
-                        Text(text = "*precio unitario", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                        Text(text = "*precio unitario", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
                     }
                 }
             }

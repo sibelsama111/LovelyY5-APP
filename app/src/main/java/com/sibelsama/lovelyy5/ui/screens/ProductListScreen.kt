@@ -1,6 +1,5 @@
 package com.sibelsama.lovelyy5.ui.screens
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -16,8 +15,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
@@ -32,9 +29,7 @@ import com.sibelsama.lovelyy5.model.Product
 import com.sibelsama.lovelyy5.model.ProductItem
 import com.sibelsama.lovelyy5.ui.viewmodels.ProductViewModel
 import com.sibelsama.lovelyy5.ui.viewmodels.CartViewModel
-import com.sibelsama.lovelyy5.R
 import com.sibelsama.lovelyy5.ui.theme.LovelyY5APPTheme
-import androidx.compose.ui.platform.LocalContext
 import coil.compose.AsyncImage
 import androidx.compose.ui.layout.ContentScale
 
@@ -64,7 +59,7 @@ fun ProductListScreen(
         }
         .sortedBy { if (sortOrder) it.price else -it.price }
 
-    Column(modifier = Modifier.fillMaxSize().background(Color(0xFFF7F3F8))) {
+    Column(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -94,9 +89,9 @@ fun ProductListScreen(
             Button(
                 onClick = { sortOrder = !sortOrder },
                 shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE3D6F7))
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary)
             ) {
-                Text(if (sortOrder) "Menor a mayor" else "Mayor a menor", color = Color(0xFFB36AE2))
+                Text(if (sortOrder) "Menor a mayor" else "Mayor a menor", color = MaterialTheme.colorScheme.primary)
             }
         }
         Spacer(modifier = Modifier.height(8.dp))
@@ -119,7 +114,7 @@ fun ProductListScreen(
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(16.dp))
                         .clickable { onProductClick(product) },
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF7F3F8)),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background),
                     elevation = CardDefaults.cardElevation(2.dp)
                 ) {
                     Column(modifier = Modifier.padding(8.dp)) {
@@ -133,9 +128,9 @@ fun ProductListScreen(
                         Button(
                             onClick = { cartViewModel.addToCart(product) },
                             modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFDE7F3))
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
                         ) {
-                            Text("Añadir al carrito", color = Color(0xFFEA7CB3))
+                            Text("Añadir al carrito", color = MaterialTheme.colorScheme.onSecondary)
                         }
                     }
                 }
@@ -145,9 +140,9 @@ fun ProductListScreen(
             onClick = onCartClick,
             modifier = Modifier.fillMaxWidth().padding(16.dp),
             shape = RoundedCornerShape(24.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFB36AE2))
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
         ) {
-            Text("Ir al carrito (${cartItems.size})", color = Color.White)
+            Text("Ir al carrito (${cartItems.size})", color = MaterialTheme.colorScheme.onPrimary)
         }
     }
 }
@@ -156,16 +151,8 @@ fun ProductItem.toProduct(): Product = Product(id = this.id, name = this.nombre,
 
 @Composable
 fun ProductImage(imagePath: String?, contentDescription: String?, modifier: Modifier = Modifier) {
-    val ctx = LocalContext.current
     if (imagePath.isNullOrBlank()) {
         AsyncImage(model = "file:///android_asset/images/app_icon.png", contentDescription = contentDescription, modifier = modifier, contentScale = ContentScale.Crop)
-        return
-    }
-
-    val fileName = imagePath.substringAfterLast('/').substringBeforeLast('.')
-    val resId = ctx.resources.getIdentifier(fileName, "drawable", ctx.packageName)
-    if (resId != 0) {
-        Image(painter = painterResource(id = resId), contentDescription = contentDescription, modifier = modifier, contentScale = ContentScale.Crop)
         return
     }
 

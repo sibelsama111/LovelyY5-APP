@@ -16,34 +16,41 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
+private val AppPrimary = Color(0xFFB36AE2)
+private val AppPrimaryVariant = Color(0xFF8A4BD0)
+private val AppSecondary = Color(0xFFFDE7F3)
+private val AppTertiary = Color(0xFFE3D6F7)
+private val AppBackground = Color(0xFFF7F3F8)
+private val AppOnBackground = Color(0xFF260303)
+
 private val DarkColorScheme = darkColorScheme(
-    primary = Color(0xFFFD5799),
-    secondary = Color(0xFFFFC9DC),
-    tertiary = Color(0xFFFFACCA),
-    background = Color(0xFF260303),
-    surface = Color(0xFF260303),
-    onPrimary = Color(0xFFFFFFFF),
-    onSecondary = Color(0xFFFFFFFF),
-    onTertiary = Color(0xFFFFFFFF),
-    onBackground = Color(0xFFFFFFFF),
-    onSurface = Color(0xFFFFFFFF),
+    primary = AppPrimary,
+    secondary = AppSecondary,
+    tertiary = AppTertiary,
+    background = AppBackground,
+    surface = Color.White,
+    onPrimary = Color.White,
+    onSecondary = AppOnBackground,
+    onTertiary = AppOnBackground,
+    onBackground = AppOnBackground,
+    onSurface = AppOnBackground,
     error = Color(0xFFFF0000),
-    onError = Color(0xFFFFFFFF)
+    onError = Color.White
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Color(0xFFFD5799),
-    secondary = Color(0xFFFFC9DC),
-    tertiary = Color(0xFFFFACCA),
-    background = Color(0xFFFFFFFF),
-    surface = Color(0xFFFFFFFF),
-    onPrimary = Color(0xFFFFFFFF),
-    onSecondary = Color(0xFFFFFFFF),
-    onTertiary = Color(0xFFFFFFFF),
-    onBackground = Color(0xFF260303),
-    onSurface = Color(0xFF260303),
+    primary = AppPrimary,
+    secondary = AppSecondary,
+    tertiary = AppTertiary,
+    background = AppBackground,
+    surface = Color.White,
+    onPrimary = Color.White,
+    onSecondary = AppOnBackground,
+    onTertiary = AppOnBackground,
+    onBackground = AppOnBackground,
+    onSurface = AppOnBackground,
     error = Color(0xFFFF0000),
-    onError = Color(0xFFFFFFFF)
+    onError = Color.White
 )
 
 @Composable
