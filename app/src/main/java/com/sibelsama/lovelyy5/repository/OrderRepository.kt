@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.encodeToString
 
 class OrderRepository(private val context: Context) {
     companion object {

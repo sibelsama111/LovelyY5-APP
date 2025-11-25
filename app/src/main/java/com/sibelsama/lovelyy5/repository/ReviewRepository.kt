@@ -10,6 +10,7 @@ import com.sibelsama.lovelyy5.model.ProductReview
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.encodeToString
 
 class ReviewRepository(private val context: Context) {
     companion object {
