@@ -29,7 +29,6 @@ import com.sibelsama.lovelyy5.ui.viewmodels.ProductViewModel
 
 @Composable
 fun OrderDetailScreen(order: Order, onBackClick: () -> Unit = {}) {
-    // Obtener productos reales desde ProductViewModel (cargados desde assets/products.json)
     val productVm: ProductViewModel = viewModel()
     val productItems by productVm.products.collectAsState()
 
@@ -45,7 +44,6 @@ fun OrderDetailScreen(order: Order, onBackClick: () -> Unit = {}) {
         contentPadding = PaddingValues(16.dp)
     ) {
         item {
-            // Header con botón de retroceso
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = onBackClick) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
@@ -57,7 +55,6 @@ fun OrderDetailScreen(order: Order, onBackClick: () -> Unit = {}) {
                 )
             }
             Spacer(modifier = Modifier.height(12.dp))
-            // Datos de envío en estilo más compacto
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text("Datos de Envío:", style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold))
                 Spacer(modifier = Modifier.height(6.dp))
@@ -86,7 +83,6 @@ fun OrderDetailScreen(order: Order, onBackClick: () -> Unit = {}) {
                 shape = RoundedCornerShape(8.dp)
             ) {
                 Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                    // Imagen del producto tomada del ProductItem si existe
                     Box(modifier = Modifier
                         .size(64.dp)
                         .clip(RoundedCornerShape(6.dp))

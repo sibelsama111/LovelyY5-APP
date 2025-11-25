@@ -49,7 +49,6 @@ fun CartScreen(
     var showShippingForm by remember { mutableStateOf(false) }
     var showSuccessDialog by remember { mutableStateOf(false) }
 
-    // Campos del formulario de envío
     var rut by remember { mutableStateOf(TextFieldValue("")) }
     var names by remember { mutableStateOf(TextFieldValue("")) }
     var lastNames by remember { mutableStateOf(TextFieldValue("")) }
@@ -59,16 +58,13 @@ fun CartScreen(
     var region by remember { mutableStateOf(TextFieldValue("")) }
     var comuna by remember { mutableStateOf(TextFieldValue("")) }
 
-    // Cargar regiones y comunas desde ViewModel (assets/regions.json)
     val regionsVm: RegionsViewModel = viewModel()
     val regionsList by regionsVm.regions.collectAsState()
-    // Fallback: si regionsList está vacío, intentar cargar directamente desde repository una vez
     val loadedRegionsState = remember { mutableStateOf<List<com.sibelsama.lovelyy5.data.RegionEntry>>(regionsList) }
     LaunchedEffect(regionsList) {
         if (regionsList.isNotEmpty()) {
             loadedRegionsState.value = regionsList
         } else {
-            // intentar cargar directamente
             try {
                 val repo = com.sibelsama.lovelyy5.data.RegionsRepository(context)
                 val loaded = repo.loadRegions()
@@ -84,7 +80,6 @@ fun CartScreen(
     var regionExpanded by remember { mutableStateOf(false) }
     var comunaExpanded by remember { mutableStateOf(false) }
 
-    // Tarifa de envío fija para ejemplo
     val shippingCost = 5000.0
 
     Scaffold(
@@ -202,7 +197,6 @@ fun CartScreen(
                 }
                 Button(
                     onClick = {
-                        // En lugar de navegar directamente, mostrar el formulario de envío
                         showShippingForm = true
                     },
                     modifier = Modifier.weight(1f).height(56.dp),
@@ -220,16 +214,13 @@ fun CartScreen(
         AlertDialog(
             onDismissRequest = { showShippingForm = false },
             confirmButton = {
-                // Habilitar solo si region y comuna seleccionadas
                 val canConfirm = region.text.isNotBlank() && comuna.text.isNotBlank()
                 TextButton(onClick = {
-                    // Validar campos mínimos
                     if (names.text.isBlank() || lastNames.text.isBlank() || phone.text.isBlank() || address.text.isBlank()) {
                         android.widget.Toast.makeText(context, "Por favor completa los datos de envío", android.widget.Toast.LENGTH_SHORT).show()
                         return@TextButton
                     }
 
-                    // Validaciones puntuales
                     val rutRegex = Regex("^[0-9]{7,8}-[0-9Kk]$")
                     if (!rut.text.matches(rutRegex)) {
                         android.widget.Toast.makeText(context, "RUT inválido. Formato ejemplo: 12345678-K", android.widget.Toast.LENGTH_SHORT).show()
@@ -250,7 +241,6 @@ fun CartScreen(
                         return@TextButton
                     }
 
-                    // Construir ShippingDetails
                     val shipping = ShippingDetails(
                         rut = rut.text,
                         names = names.text,
@@ -262,10 +252,8 @@ fun CartScreen(
                         comuna = comuna.text
                     )
 
-                    // Crear ID de pedido basado en timestamp
                     val id = SimpleDateFormat("yyyyMMddHHmmss", Locale.getDefault()).format(Date())
 
-                    // Tomar snapshot actual de cartItems para asegurar coincidencia
                     val snapshot = cartViewModel.cartItems.value
                     val itemsMap = snapshot.entries.associate { (product, qty) -> product.id to qty }
                     val total = subtotal + shippingCost
@@ -279,10 +267,8 @@ fun CartScreen(
                         total = total
                     )
 
-                    // Guardar el pedido
                     orderViewModel.saveOrder(order)
 
-                    // Vibrar y mostrar alerta de éxito
                     @Suppress("DEPRECATION")
                     val vibrator = context.getSystemService(Vibrator::class.java)
                     vibrator?.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE))
@@ -290,10 +276,8 @@ fun CartScreen(
                     showShippingForm = false
                     showSuccessDialog = true
 
-                    // Limpiar carrito
                     cartViewModel.clearCart()
 
-                    // Notificar al NavGraph con el order creado para navegar al detalle inmediatamente
                     onPurchaseCompleted(order)
                 }, enabled = canConfirm) {
                     Text("Confirmar compra")
@@ -368,7 +352,6 @@ fun CartScreen(
             }
         )
 
-        // Dialogo de éxito
         if (showSuccessDialog) {
             AlertDialog(
                 onDismissRequest = { showSuccessDialog = false },

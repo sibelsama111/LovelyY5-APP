@@ -25,7 +25,6 @@ import com.sibelsama.lovelyy5.model.Product
 import com.sibelsama.lovelyy5.model.ShippingDetails
 import com.sibelsama.lovelyy5.ui.theme.LovelyY5APPTheme
 
-// Basic validation functions
 private fun validateRut(rut: String): Boolean {
     val regex = Regex("""^([0-9]{1,2}\.?[0-9]{3}\.?[0-9]{3}-?[0-9kK])$""")
     return regex.matches(rut)
@@ -92,7 +91,6 @@ fun CheckoutFormScreen(
                     .padding(horizontal = 16.dp)
                     .verticalScroll(rememberScrollState())
             ) {
-                // ...existing code...
                 Spacer(modifier = Modifier.height(24.dp))
                 // Mostrar resumen de shipping y totales para usar las variables y eliminar advertencias
                 Text("Envío a: ${shippingDetails.names} - ${shippingDetails.address}", style = MaterialTheme.typography.bodySmall)
@@ -103,7 +101,6 @@ fun CheckoutFormScreen(
                     onClick = {
                         showConfirmation = true
                         onConfirm()
-                        // Vibración al confirmar
                         val vibrator = context.getSystemService(Vibrator::class.java)
                         vibrator?.vibrate(VibrationEffect.createOneShot(200, VibrationEffect.DEFAULT_AMPLITUDE))
                     },
@@ -143,8 +140,8 @@ fun CheckoutFormScreen(
                                 style = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.primary),
                                 modifier = Modifier.clickable {
                                     showConfirmation = false
-                                    // Navegar a pantalla de pedidos
-                                    onConfirm() // Puedes usar un callback para cambiar de pantalla
+
+                                    onConfirm()
                                 }
                             )
                         }

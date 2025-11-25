@@ -9,7 +9,6 @@ import com.sibelsama.lovelyy5.ui.viewmodels.ReviewViewModel
 import com.sibelsama.lovelyy5.model.Order
 import androidx.compose.ui.tooling.preview.Preview
 
-// Instancia usada exclusivamente para previews (construida fuera de la composición)
 private val previewCartVm = CartViewModel()
 
 sealed class Screen {
@@ -26,7 +25,6 @@ fun NavGraph(
     cartViewModel: CartViewModel? = null,
     reviewViewModel: ReviewViewModel? = null
 ) {
-    // Crear viewModels dentro de la composición si no se inyectaron
     val cartVm: CartViewModel = cartViewModel ?: viewModel()
     val reviewVm: ReviewViewModel = reviewViewModel ?: viewModel()
     val productVm: com.sibelsama.lovelyy5.ui.viewmodels.ProductViewModel = viewModel()
@@ -55,11 +53,9 @@ fun NavGraph(
             )
         }
         is Screen.ProductDetail -> {
-            // Buscar producto en el catálogo cargado desde JSON
             val productItem = productVm.products.collectAsState().value.find { it.id == screen.productId }
             val product = productItem?.toProduct()
             if (product != null) {
-                // Pasar argumentos posicionalmente para evitar discrepancias en nombres
                 ProductDetailScreen(product, productItem, reviewVm, { cartVm.addToCart(product) }, { currentScreen = Screen.Home })
             } else {
                 Text("Producto no encontrado")

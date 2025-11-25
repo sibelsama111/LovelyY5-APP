@@ -24,7 +24,6 @@ import com.sibelsama.lovelyy5.ui.theme.LovelyY5APPTheme
 @Composable
 fun OrderListScreen(orders: List<Order>, onOrderClick: (String) -> Unit, onBackClick: () -> Unit) {
     Column(modifier = Modifier.fillMaxSize()) {
-        // Header con botón de retroceso
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -88,7 +87,6 @@ fun OrderListScreenPreview() {
         Order(
             id = "00001",
             shippingDetails = ShippingDetails("12.345.678-9", "Gino", "Sama", "+56912345678", "gino@sama.com", "Calle Falsa 123", "RM - Región Metropolitana", "Santiago"),
-            // items: Map<productId, quantity>
             items = mapOf(1 to 3),
             subtotal = 390000.0,
             shippingCost = 5000.0,

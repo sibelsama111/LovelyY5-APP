@@ -63,7 +63,7 @@ fun HomeScreen(
         AppHeader(isHome = true)
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Header actions: carrito + pedidos
+
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
             IconButton(onClick = onCartClick) {
                 Icon(Icons.Default.ShoppingCart, contentDescription = "Carrito")
@@ -90,7 +90,6 @@ fun HomeScreen(
         SectionHeader(title = "Productos destacados", onSeeAll = onSeeAllProducts)
         LazyRow(contentPadding = PaddingValues(vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             items(items = sampleProducts.take(6)) { product ->
-                // Buscar ProductItem asociado para obtener la primera imagen
                 val prodItem = productItems.find { it.id == product.id }
                 val imgPath = prodItem?.imagenes?.firstOrNull()
                 ProductCard(product = product, onProductClick = onProductClick, onAddToCartClick = { cartViewModel.addToCart(product) }, imagePath = imgPath)
@@ -110,14 +109,12 @@ fun HomeScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Banner placeholder: deja esta URL para que pegues la imagen en assets/images/banner.png
         Box(modifier = Modifier.fillMaxWidth().height(160.dp)) {
             AsyncImage(model = "file:///android_asset/images/banner_sobre_nos.png", contentDescription = "Banner Sobre Nosotros", modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
         }
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Footer
         Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 IconButton(onClick = {

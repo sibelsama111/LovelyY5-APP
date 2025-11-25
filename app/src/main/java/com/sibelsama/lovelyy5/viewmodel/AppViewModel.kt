@@ -6,10 +6,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-/**
- * ViewModel ligero que sólo mantiene un catálogo local y un carrito en memoria.
- * Las operaciones persistentes se manejan en los repositorios dentro de los ViewModels de UI.
- */
 class AppViewModel : ViewModel() {
     val productList = listOf(
         Product(1, "Notebook HP", "Notebook 15,6\" Intel i5, 8GB, 256GB SSD", 499900.0),

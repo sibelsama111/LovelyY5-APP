@@ -14,9 +14,6 @@ data class ShippingDetails(
     val comuna: String
 )
 
-/**
- * Nota: items utiliza Map<productId, cantidad> para facilitar la serialización y el almacenamiento.
- */
 @Serializable
 data class Order(
     val id: String,
