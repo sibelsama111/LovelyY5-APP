@@ -18,3 +18,12 @@ data class ProductItem(
     val tipo: String
 )
 
+fun ProductItem.toProduct(): Product {
+    return Product(
+        id = this.id,
+        name = this.nombre,
+        description = this.descripcion,
+        price = this.precioActual,
+        tipo = this.tipo
+    )
+}

@@ -1,88 +1,126 @@
 package com.sibelsama.lovelyy5.ui.screens
 
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Pets
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.compose.currentBackStackEntryAsState
+import com.sibelsama.lovelyy5.ui.dopamina.DopaminaScreen
 import com.sibelsama.lovelyy5.ui.theme.LovelyY5APPTheme
 import com.sibelsama.lovelyy5.ui.viewmodels.CartViewModel
+import com.sibelsama.lovelyy5.ui.viewmodels.OrderViewModel
+import com.sibelsama.lovelyy5.ui.viewmodels.ProductViewModel
 import com.sibelsama.lovelyy5.ui.viewmodels.ReviewViewModel
-import com.sibelsama.lovelyy5.model.Order
-import androidx.compose.ui.tooling.preview.Preview
-
-private val previewCartVm = CartViewModel()
-
-sealed class Screen {
-    object Home : Screen()
-    data class Products(val category: String? = null) : Screen()
-    data class ProductDetail(val productId: Int) : Screen()
-    object Cart : Screen()
-    object Orders : Screen()
-    data class OrderDetail(val order: Order) : Screen()
-}
 
 @Composable
 fun NavGraph(
-    cartViewModel: CartViewModel? = null,
-    reviewViewModel: ReviewViewModel? = null
+    cartViewModel: CartViewModel = viewModel(),
+    reviewViewModel: ReviewViewModel = viewModel(),
+    productViewModel: ProductViewModel = viewModel(),
+    orderViewModel: OrderViewModel = viewModel()
 ) {
-    val cartVm: CartViewModel = cartViewModel ?: viewModel()
-    val reviewVm: ReviewViewModel = reviewViewModel ?: viewModel()
-    val productVm: com.sibelsama.lovelyy5.ui.viewmodels.ProductViewModel = viewModel()
-    val orderVm: com.sibelsama.lovelyy5.ui.viewmodels.OrderViewModel = viewModel()
+    val navController = rememberNavController()
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
 
-    var currentScreen by remember { mutableStateOf<Screen>(Screen.Home) }
-
-    when (val screen = currentScreen) {
-        is Screen.Home -> HomeScreen(
-            onProductClick = { product -> currentScreen = Screen.ProductDetail(product.id) },
-            onCartClick = { currentScreen = Screen.Cart },
-            onOrdersClick = { currentScreen = Screen.Orders },
-            onCategoryClick = { category -> currentScreen = Screen.Products(category) },
-            onSeeAllProducts = { currentScreen = Screen.Products(null) },
-            onSeeAllCategories = { currentScreen = Screen.Products(null) },
-            cartViewModel = cartVm
-        )
-        is Screen.Products -> {
-            val category = screen.category
-            ProductListScreen(
-                onProductClick = { product -> currentScreen = Screen.ProductDetail(product.id) },
-                onCartClick = { currentScreen = Screen.Cart },
-                cartViewModel = cartVm,
-                onBackClick = { currentScreen = Screen.Home },
-                initialCategory = category
-            )
-        }
-        is Screen.ProductDetail -> {
-            val productItem = productVm.products.collectAsState().value.find { it.id == screen.productId }
-            val product = productItem?.toProduct()
-            if (product != null) {
-                ProductDetailScreen(product, productItem, reviewVm, { cartVm.addToCart(product) }, { currentScreen = Screen.Home })
-            } else {
-                Text("Producto no encontrado")
+    Scaffold(
+        floatingActionButton = {
+            if (currentRoute != "cart" && currentRoute != "orders" && currentRoute != "dopamina") {
+                FloatingActionButton(onClick = { navController.navigate("dopamina") }) {
+                    Icon(Icons.Default.Pets, contentDescription = "Dopamina")
+                }
             }
         }
-        is Screen.Cart -> CartScreen(
-            onClearCart = { cartVm.clearCart() },
-            onBackClick = { currentScreen = Screen.Home },
-            onPurchaseCompleted = { currentScreen = Screen.Orders },
-            cartViewModel = cartVm
-        )
-        is Screen.Orders -> {
-            val orders by orderVm.orders.collectAsState()
-            OrderListScreen(orders = orders, onOrderClick = { orderId ->
-                val ord = orderVm.orders.value.find { it.id == orderId }
-                if (ord != null) currentScreen = Screen.OrderDetail(ord)
-            }, onBackClick = { currentScreen = Screen.Home })
-        }
-        is Screen.OrderDetail -> {
-            OrderDetailScreen(order = screen.order, onBackClick = { currentScreen = Screen.Orders })
+    ) { innerPadding ->
+        NavHost(
+            navController = navController,
+            startDestination = "home",
+            modifier = Modifier.padding(innerPadding)
+        ) {
+            composable("home") {
+                HomeScreen(
+                    onProductClick = { product -> navController.navigate("product/${product.id}") },
+                    onCartClick = { navController.navigate("cart") },
+                    onOrdersClick = { navController.navigate("orders") },
+                    onCategoryClick = { category -> navController.navigate("products/$category") },
+                    onSeeAllProducts = { navController.navigate("products") },
+                    onSeeAllCategories = { navController.navigate("products") },
+                    cartViewModel = cartViewModel
+                )
+            }
+            composable("products") {
+                ProductListScreen(
+                    onProductClick = { product -> navController.navigate("product/${product.id}") },
+                    onCartClick = { navController.navigate("cart") },
+                    cartViewModel = cartViewModel,
+                    onBackClick = { navController.popBackStack() }
+                )
+            }
+            composable("products/{category}") { backStackEntry ->
+                val category = backStackEntry.arguments?.getString("category")
+                ProductListScreen(
+                    onProductClick = { product -> navController.navigate("product/${product.id}") },
+                    onCartClick = { navController.navigate("cart") },
+                    cartViewModel = cartViewModel,
+                    onBackClick = { navController.popBackStack() },
+                    initialCategory = category
+                )
+            }
+            composable("product/{productId}") { backStackEntry ->
+                val productId = backStackEntry.arguments?.getString("productId")?.toIntOrNull()
+                val productItem = productViewModel.products.collectAsState().value.find { it.id == productId }
+                val product = productItem?.toProduct()
+                if (product != null) {
+                    ProductDetailScreen(
+                        product,
+                        productItem,
+                        reviewViewModel,
+                        { cartViewModel.addToCart(product) },
+                        { navController.popBackStack() })
+                } else {
+                    Text("Producto no encontrado")
+                }
+            }
+            composable("cart") {
+                CartScreen(
+                    onClearCart = { cartViewModel.clearCart() },
+                    onBackClick = { navController.popBackStack() },
+                    onPurchaseCompleted = { navController.navigate("orders") },
+                    cartViewModel = cartViewModel
+                )
+            }
+            composable("orders") {
+                val orders by orderViewModel.orders.collectAsState()
+                OrderListScreen(
+                    orders = orders,
+                    onOrderClick = { /* Navigation to order detail not implemented */ },
+                    onBackClick = { navController.popBackStack() }
+                )
+            }
+            composable("dopamina") {
+                DopaminaScreen(onBackClick = { navController.popBackStack() })
+            }
         }
     }
 }
+
 @Preview(showBackground = true)
 @Composable
 fun NavGraphPreview() {
     LovelyY5APPTheme {
-        NavGraph(cartViewModel = previewCartVm)
+        NavGraph()
     }
 }
+

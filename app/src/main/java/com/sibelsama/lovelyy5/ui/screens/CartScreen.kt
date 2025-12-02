@@ -29,6 +29,7 @@ import com.sibelsama.lovelyy5.model.ShippingDetails
 import com.sibelsama.lovelyy5.ui.viewmodels.OrderViewModel
 import java.text.SimpleDateFormat
 import java.util.*
+import com.sibelsama.lovelyy5.ui.components.ProductImage
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

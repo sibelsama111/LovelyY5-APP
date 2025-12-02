@@ -24,7 +24,6 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.font.FontWeight
 import com.sibelsama.lovelyy5.model.Product
-import com.sibelsama.lovelyy5.ui.screens.ProductImage
 
 @Composable
 fun ProductCard(product: Product, onProductClick: (Product) -> Unit, onAddToCartClick: () -> Unit, imagePath: String? = null) {

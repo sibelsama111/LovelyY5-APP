@@ -30,6 +30,7 @@ import com.sibelsama.lovelyy5.model.ProductItem
 import com.sibelsama.lovelyy5.ui.viewmodels.ProductViewModel
 import com.sibelsama.lovelyy5.ui.viewmodels.CartViewModel
 import com.sibelsama.lovelyy5.ui.theme.LovelyY5APPTheme
+import com.sibelsama.lovelyy5.ui.components.ProductImage
 import coil.compose.AsyncImage
 import androidx.compose.ui.layout.ContentScale
 
@@ -149,23 +150,6 @@ fun ProductListScreen(
 
 fun ProductItem.toProduct(): Product = Product(id = this.id, name = this.nombre, description = this.descripcion, price = this.precioActual, tipo = this.tipo)
 
-@Composable
-fun ProductImage(imagePath: String?, contentDescription: String?, modifier: Modifier = Modifier) {
-    if (imagePath.isNullOrBlank()) {
-        AsyncImage(model = "file:///android_asset/images/app_icon.png", contentDescription = contentDescription, modifier = modifier, contentScale = ContentScale.Crop)
-        return
-    }
-
-    val assetRelative = when {
-        imagePath.contains("/assets/") -> imagePath.substringAfter("/assets/")
-        imagePath.startsWith("assets/") -> imagePath.substringAfter("assets/")
-        imagePath.startsWith("/") -> imagePath.trimStart('/')
-        else -> imagePath
-    }
-
-    val assetUri = "file:///android_asset/$assetRelative"
-    AsyncImage(model = assetUri, contentDescription = contentDescription, modifier = modifier, contentScale = ContentScale.Crop)
-}
 
 @Preview(showBackground = true)
 @Composable

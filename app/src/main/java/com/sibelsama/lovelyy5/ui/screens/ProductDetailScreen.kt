@@ -1,46 +1,50 @@
 package com.sibelsama.lovelyy5.ui.screens
 
-import androidx.compose.foundation.Image
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import android.net.Uri
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.*
-import coil.compose.rememberAsyncImagePainter
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
-import androidx.compose.ui.input.pointer.pointerInput
-import kotlin.math.abs
-import androidx.compose.foundation.clickable
-import androidx.compose.ui.platform.LocalContext
-import android.os.VibrationEffect
-import android.os.Vibrator
-import com.sibelsama.lovelyy5.model.Product
-import com.sibelsama.lovelyy5.model.ProductItem
-import com.sibelsama.lovelyy5.model.ProductReview
-import com.sibelsama.lovelyy5.ui.viewmodels.ReviewViewModel
-import android.Manifest
-import android.content.pm.PackageManager
-import androidx.core.content.ContextCompat
-import android.widget.Toast
-import java.io.File
-import android.content.Context
+import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.window.Dialog
+import androidx.core.content.ContextCompat
+import coil.compose.AsyncImage
+import coil.compose.rememberAsyncImagePainter
+import com.sibelsama.lovelyy5.model.Product
+import com.sibelsama.lovelyy5.model.ProductItem
+import com.sibelsama.lovelyy5.model.ProductReview
+import com.sibelsama.lovelyy5.ui.components.ProductImage
+import com.sibelsama.lovelyy5.ui.viewmodels.ReviewViewModel
+import java.io.File
+import kotlin.math.abs
 
 @Composable
 fun ProductDetailScreen(
@@ -56,7 +60,9 @@ fun ProductDetailScreen(
     var name by remember { mutableStateOf("") }
     var comment by remember { mutableStateOf("") }
     var rating by remember { mutableStateOf(1) }
-    var images by remember { mutableStateOf(listOf<Uri>()) }
+    val newReviewImages by reviewViewModel.newReviewImages.collectAsState()
+    var showImageViewer by remember { mutableStateOf(false) }
+    var selectedImageUri by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(product.id) {
         if (!reviewsLoaded) {
@@ -64,11 +70,29 @@ fun ProductDetailScreen(
                 val currentReviews = reviewViewModel.getReviews(product.id).value
                 reviews = currentReviews
                 reviewsLoaded = true
-                android.util.Log.d("ProductDetailScreen", "Reviews loaded once: ${currentReviews.size}")
             } catch (e: Exception) {
                 android.util.Log.e("ProductDetailScreen", "Error loading reviews", e)
                 reviews = emptyList()
                 reviewsLoaded = true
+            }
+        }
+    }
+
+    if (showImageViewer && selectedImageUri != null) {
+        Dialog(onDismissRequest = { showImageViewer = false }) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.8f))
+                    .clickable { showImageViewer = false },
+                contentAlignment = Alignment.Center
+            ) {
+                AsyncImage(
+                    model = selectedImageUri,
+                    contentDescription = "Visor de imagen",
+                    modifier = Modifier.fillMaxWidth(),
+                    contentScale = ContentScale.Fit
+                )
             }
         }
     }
@@ -80,12 +104,11 @@ fun ProductDetailScreen(
             try {
                 val internalDir = context.filesDir
                 val imageFile = File(internalDir, "temp_image_${System.currentTimeMillis()}.jpg")
-                val outputStream = imageFile.outputStream()
-                bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 85, outputStream)
-                outputStream.close()
-
+                imageFile.outputStream().use { out ->
+                    bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 85, out)
+                }
                 val imageUri = Uri.fromFile(imageFile)
-                images = images + imageUri
+                reviewViewModel.addImageToNewReview(imageUri.toString())
                 Toast.makeText(context, "📷 Imagen agregada a la valoración", Toast.LENGTH_SHORT).show()
             } catch (e: Exception) {
                 Toast.makeText(context, "Error al guardar imagen: ${e.message}", Toast.LENGTH_LONG).show()
@@ -94,30 +117,25 @@ fun ProductDetailScreen(
     }
 
     val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
-        images = images + uris
-        Toast.makeText(context, "🖼️ ${uris.size} imagen(es) agregada(s)", Toast.LENGTH_SHORT).show()
+        uris.forEach { reviewViewModel.addImageToNewReview(it.toString()) }
+        if (uris.isNotEmpty()) {
+            Toast.makeText(context, "🖼️ ${uris.size} imagen(es) agregada(s)", Toast.LENGTH_SHORT).show()
+        }
     }
 
-    val cameraPermissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
         if (isGranted) {
-            try {
-                cameraLauncher.launch(null)
-            } catch (e: Exception) {
-                Toast.makeText(context, "Error al abrir la cámara: ${e.message}", Toast.LENGTH_LONG).show()
-            }
+            cameraLauncher.launch(null)
         } else {
             Toast.makeText(context, "Permiso de cámara denegado", Toast.LENGTH_SHORT).show()
         }
     }
 
-    val mediaPermissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
+    val mediaPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
         if (isGranted) {
             galleryLauncher.launch("image/*")
         } else {
+            // Still launch, system might handle it with a picker without the permission
             galleryLauncher.launch("image/*")
         }
     }
@@ -130,7 +148,9 @@ fun ProductDetailScreen(
             .padding(bottom = 16.dp)
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = onBackClick) {
@@ -144,6 +164,7 @@ fun ProductDetailScreen(
         Text(product.description, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(horizontal = 16.dp))
         Text("$${product.price.toInt()} CLP", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = 16.dp))
         Spacer(modifier = Modifier.height(8.dp))
+
         val imgs = productItem?.imagenes ?: emptyList()
         if (imgs.isNotEmpty()) {
             val page = remember { mutableStateOf(0) }
@@ -153,40 +174,35 @@ fun ProductDetailScreen(
                     .height(300.dp)
                     .clip(RoundedCornerShape(12.dp))
                     .pointerInput(imgs) {
-                        detectHorizontalDragGestures(onHorizontalDrag = { change, dragAmount ->
+                        detectHorizontalDragGestures { change, dragAmount ->
                             if (abs(dragAmount) > 20) {
-                                if (dragAmount < 0 && page.value < imgs.lastIndex) page.value = page.value + 1
-                                else if (dragAmount > 0 && page.value > 0) page.value = page.value - 1
+                                if (dragAmount < 0 && page.value < imgs.lastIndex) page.value++
+                                else if (dragAmount > 0 && page.value > 0) page.value--
                                 change.consume()
                             }
-                        })
+                        }
                     }
             ) {
                 ProductImage(imagePath = imgs[page.value], contentDescription = "${product.name} - ${page.value + 1}", modifier = Modifier.fillMaxSize())
             }
-
-            val thumbsToShow = imgs.drop(1).take(3)
-            if (thumbsToShow.isNotEmpty()) {
-                Row(modifier = Modifier.fillMaxWidth().padding(8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    thumbsToShow.forEachIndexed { idx, path ->
-                        val originalIndex = idx + 1
-                        Card(modifier = Modifier.size(72.dp).clickable { page.value = originalIndex }) {
-                            ProductImage(imagePath = path, contentDescription = "thumb_$originalIndex", modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(8.dp)))
-                        }
-                    }
-                }
-            }
         } else {
-            ProductImage(imagePath = null, contentDescription = product.name, modifier = Modifier.fillMaxWidth().height(200.dp).clip(RoundedCornerShape(12.dp)))
+            ProductImage(imagePath = null, contentDescription = product.name, modifier = Modifier
+                .fillMaxWidth()
+                .height(200.dp)
+                .clip(RoundedCornerShape(12.dp)))
         }
+
         Spacer(modifier = Modifier.height(8.dp))
-        Button(onClick = {
+        Button(
+            onClick = {
                 @Suppress("DEPRECATION")
                 val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
                 vibrator?.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.EFFECT_TICK))
                 onAddToCart()
             },
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
         ) {
             Text("Añadir al carrito", color = Color.White)
@@ -197,22 +213,27 @@ fun ProductDetailScreen(
         Spacer(modifier = Modifier.height(16.dp))
         HorizontalDivider()
         Spacer(modifier = Modifier.height(8.dp))
+
+        // Review Form
         Text("Deje su valoración", style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold), modifier = Modifier.padding(horizontal = 16.dp))
-        OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Nombre") }, modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp))
-        OutlinedTextField(value = comment, onValueChange = { comment = it }, label = { Text("Opinión del producto") }, modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp))
-        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Nombre") }, modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp))
+        OutlinedTextField(value = comment, onValueChange = { comment = it }, label = { Text("Opinión del producto") }, modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp))
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
             Button(onClick = {
-                when (PackageManager.PERMISSION_GRANTED) {
-                    ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) -> {
-                        try {
-                            cameraLauncher.launch(null)
-                        } catch (e: Exception) {
-                            Toast.makeText(context, "Error al abrir la cámara: ${e.message}", Toast.LENGTH_LONG).show()
-                        }
-                    }
-                    else -> {
-                        cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
-                    }
+                if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+                    cameraLauncher.launch(null)
+                } else {
+                    cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
                 }
             }, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
                 Text("📷 Cámara", color = Color.White)
@@ -221,45 +242,59 @@ fun ProductDetailScreen(
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
                     galleryLauncher.launch("image/*")
                 } else {
-                    when (PackageManager.PERMISSION_GRANTED) {
-                        ContextCompat.checkSelfPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE) -> {
-                            galleryLauncher.launch("image/*")
-                        }
-                        else -> {
-                            mediaPermissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
-                        }
+                    if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+                        galleryLauncher.launch("image/*")
+                    } else {
+                        mediaPermissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
                     }
                 }
             }, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)) {
                 Text("🖼️ Galería", color = MaterialTheme.colorScheme.onSecondary)
             }
+            Button(onClick = { reviewViewModel.fetchRandomCatImage() }) {
+                Text("🐱 Gato")
+            }
         }
-        if (images.isNotEmpty()) {
+
+        if (newReviewImages.isNotEmpty()) {
             Text(
-                text = "Imágenes seleccionadas (${images.size}):",
+                text = "Imágenes seleccionadas (${newReviewImages.size}):",
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
             )
-            Row(modifier = Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 8.dp)) {
-                images.forEach { uri ->
+            Row(
+                modifier = Modifier
+                    .horizontalScroll(rememberScrollState())
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                newReviewImages.forEach { uri ->
                     Box(modifier = Modifier.padding(end = 12.dp)) {
                         Card(
-                            modifier = Modifier.size(80.dp),
+                            modifier = Modifier
+                                .size(80.dp)
+                                .clickable {
+                                    selectedImageUri = uri
+                                    showImageViewer = true
+                                },
                             elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                         ) {
-                            Image(
-                                painter = rememberAsyncImagePainter(uri),
+                            AsyncImage(
+                                model = uri,
                                 contentDescription = "Imagen para valoración",
-                                modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(8.dp)),
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .clip(RoundedCornerShape(8.dp)),
                                 contentScale = ContentScale.Crop
                             )
                         }
                         IconButton(
                             onClick = {
-                                images = images.filter { it != uri }
+                                reviewViewModel.removeImageFromNewReview(uri)
                                 Toast.makeText(context, "Imagen eliminada", Toast.LENGTH_SHORT).show()
                             },
-                            modifier = Modifier.align(Alignment.TopEnd).size(24.dp)
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .size(24.dp)
                         ) {
                             Icon(
                                 Icons.Default.Cancel,
@@ -272,7 +307,11 @@ fun ProductDetailScreen(
                 }
             }
         }
-        Row(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+
+        Row(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             IconButton(onClick = { if (rating > 1) rating-- }) {
                 Icon(Icons.Default.Star, contentDescription = "Menos estrella", tint = if (rating > 1) MaterialTheme.colorScheme.primary else Color.Gray)
             }
@@ -282,6 +321,7 @@ fun ProductDetailScreen(
             }
             Text("Estrellas", style = MaterialTheme.typography.bodyMedium)
         }
+
         Button(
             onClick = {
                 @Suppress("DEPRECATION")
@@ -294,46 +334,50 @@ fun ProductDetailScreen(
                         name = name,
                         comment = comment,
                         rating = rating,
-                        imageUris = images.map { it.toString() }
+                        imageUris = newReviewImages
                     )
-
                     reviews = reviews + newReview
-
                     reviewViewModel.saveReview(newReview)
+                    reviewViewModel.clearNewReviewImages()
 
                     name = ""
                     comment = ""
                     rating = 1
-                    images = emptyList()
-
                     Toast.makeText(context, "¡Valoración guardada exitosamente!", Toast.LENGTH_LONG).show()
                 } else {
                     Toast.makeText(context, "Por favor complete el nombre y el comentario", Toast.LENGTH_SHORT).show()
                 }
             },
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
         ) {
             Text("Valorar Producto", color = MaterialTheme.colorScheme.onPrimary)
         }
+
         Spacer(modifier = Modifier.height(24.dp))
         HorizontalDivider()
         Spacer(modifier = Modifier.height(16.dp))
+
+        // Reviews List
         Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text("Valoraciones", style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold))
             Text("(${reviews.size})", style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
         }
-
-        android.util.Log.d("ProductDetailScreen", "Rendering reviews section with ${reviews.size} reviews - Static: $reviewsLoaded")
         Spacer(modifier = Modifier.height(8.dp))
 
         if (reviews.isEmpty()) {
             Card(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
                 colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5))
             ) {
                 Text(
@@ -344,59 +388,60 @@ fun ProductDetailScreen(
                 )
             }
         } else {
-            reviews.forEachIndexed { index, review ->
-                key("review_${review.productId}_${review.name}_${review.comment.hashCode()}_$index") {
-                    Card(
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-                    ) {
-                    Column(modifier = Modifier.padding(12.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(review.name, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold))
-                            Spacer(modifier = Modifier.width(8.dp))
-                            repeat(review.rating) {
-                                Icon(Icons.Default.Star, contentDescription = "Estrella", tint = Color(0xFFFFD700), modifier = Modifier.size(16.dp))
-                            }
-                            repeat(5 - review.rating) {
-                                Icon(Icons.Default.Star, contentDescription = "Estrella vacía", tint = Color.LightGray, modifier = Modifier.size(16.dp))
-                            }
-                        }
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(review.comment, style = MaterialTheme.typography.bodySmall)
-
-                        if (review.imageUris.isNotEmpty()) {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = "📷 ${review.imageUris.size} imagen(es)",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = Color.Gray
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Row(modifier = Modifier.horizontalScroll(rememberScrollState())) {
-                                review.imageUris.forEach { uriStr ->
-                                    Card(
-                                        modifier = Modifier
-                                            .size(100.dp)
-                                            .padding(end = 8.dp),
-                                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                                    ) {
-                                        Image(
-                                            painter = rememberAsyncImagePainter(uriStr),
-                                            contentDescription = "Imagen de valoración",
-                                            modifier = Modifier.fillMaxSize(),
-                                            contentScale = ContentScale.Crop
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
+            reviews.forEach { review ->
+                ReviewItem(review = review) { uri ->
+                    selectedImageUri = uri
+                    showImageViewer = true
                 }
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+        }
+        Spacer(modifier = Modifier.height(32.dp))
+    }
+}
+
+@Composable
+fun ReviewItem(review: ProductReview, onImageClick: (String) -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Text(review.name, fontWeight = FontWeight.Bold)
+            Text(review.comment)
+            Row {
+                (1..5).forEach { star ->
+                    Icon(
+                        Icons.Default.Star,
+                        contentDescription = "Estrella",
+                        tint = if (star <= review.rating) Color(0xFFFFD700) else Color.Gray,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            }
+            if (review.imageUris.isNotEmpty()) {
+                Row(
+                    modifier = Modifier
+                        .horizontalScroll(rememberScrollState())
+                        .padding(top = 8.dp)
+                ) {
+                    review.imageUris.forEach { uri ->
+                        Image(
+                            painter = rememberAsyncImagePainter(uri),
+                            contentDescription = "Imagen de reseña",
+                            modifier = Modifier
+                                .size(60.dp)
+                                .padding(end = 8.dp)
+                                .clip(RoundedCornerShape(4.dp))
+                                .clickable { onImageClick(uri) },
+                            contentScale = ContentScale.Crop
+                        )
+                    }
                 }
             }
         }
-
-        Spacer(modifier = Modifier.height(32.dp))
     }
 }

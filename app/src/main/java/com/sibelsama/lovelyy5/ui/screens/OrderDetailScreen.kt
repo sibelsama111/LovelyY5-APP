@@ -25,6 +25,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.HorizontalDivider
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.sibelsama.lovelyy5.ui.components.ProductImage
 import com.sibelsama.lovelyy5.ui.viewmodels.ProductViewModel
 
 @Composable
