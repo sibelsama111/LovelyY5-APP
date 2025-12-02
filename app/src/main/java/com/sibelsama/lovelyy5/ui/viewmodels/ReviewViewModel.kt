@@ -11,6 +11,8 @@ import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
 import io.ktor.serialization.kotlinx.json.json
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -23,7 +25,8 @@ class ReviewViewModel(
         install(ContentNegotiation) {
             json(kotlinx.serialization.json.Json { ignoreUnknownKeys = true })
         }
-    }
+    },
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : AndroidViewModel(application) {
     private val repository = ReviewRepository(application.applicationContext)
 
@@ -54,7 +57,7 @@ class ReviewViewModel(
 
 
     fun fetchRandomCatImage() {
-        viewModelScope.launch {
+        viewModelScope.launch(ioDispatcher) {
             try {
                 val response: List<com.sibelsama.lovelyy5.ui.dopamina.CatImage> = client.get("https://api.thecatapi.com/v1/images/search").body()
                 response.firstOrNull()?.url?.let {
@@ -67,7 +70,7 @@ class ReviewViewModel(
     }
 
     fun saveReview(review: ProductReview) {
-        viewModelScope.launch {
+        viewModelScope.launch(ioDispatcher) {
             try {
                 repository.saveReview(review)
                 android.util.Log.d("ReviewViewModel", "Review saved successfully")

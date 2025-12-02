@@ -1,13 +1,10 @@
 package com.sibelsama.lovelyy5.ui.viewmodels
 
-import android.app.Application
 import com.sibelsama.lovelyy5.model.Product
-import io.mockk.coEvery
-import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -20,7 +17,7 @@ import org.junit.Test
 class CartViewModelTest {
 
     private lateinit var cartViewModel: CartViewModel
-    private val testDispatcher = StandardTestDispatcher()
+    private val testDispatcher = UnconfinedTestDispatcher()
 
     @Before
     fun setUp() {
@@ -34,7 +31,7 @@ class CartViewModelTest {
     }
 
     @Test
-    fun `addToCart should add new product`() = runTest {
+    fun `addToCart should add new product`() = runTest(testDispatcher) {
         val product = Product(1, "Test Product", "Description", 100.0, "Tipo")
 
         cartViewModel.addToCart(product)
@@ -45,7 +42,7 @@ class CartViewModelTest {
     }
 
     @Test
-    fun `addToCart should increase quantity of existing product`() = runTest {
+    fun `addToCart should increase quantity of existing product`() = runTest(testDispatcher) {
         val product = Product(1, "Test Product", "Description", 100.0, "Tipo")
 
         cartViewModel.addToCart(product)
@@ -57,7 +54,7 @@ class CartViewModelTest {
     }
 
     @Test
-    fun `removeFromCart should remove product completely`() = runTest {
+    fun `removeFromCart should remove product completely`() = runTest(testDispatcher) {
         val product = Product(1, "Test Product", "Description", 100.0, "Tipo")
         cartViewModel.addToCart(product)
 
@@ -68,7 +65,7 @@ class CartViewModelTest {
     }
 
     @Test
-    fun `updateQuantity should change product quantity`() = runTest {
+    fun `updateQuantity should change product quantity`() = runTest(testDispatcher) {
         val product = Product(1, "Test Product", "Description", 100.0, "Tipo")
         cartViewModel.addToCart(product)
 
@@ -79,7 +76,7 @@ class CartViewModelTest {
     }
 
     @Test
-    fun `clearCart should empty the cart`() = runTest {
+    fun `clearCart should empty the cart`() = runTest(testDispatcher) {
         val product1 = Product(1, "Test Product 1", "Desc 1", 100.0, "Tipo")
         val product2 = Product(2, "Test Product 2", "Desc 2", 200.0, "Tipo")
         cartViewModel.addToCart(product1)
