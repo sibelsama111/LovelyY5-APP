@@ -236,7 +236,7 @@ fun ProductDetailScreen(
                     cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
                 }
             }, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
-                Text("📷 Cámara", color = Color.White)
+                Text("Cámara", color = Color.White)
             }
             Button(onClick = {
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
@@ -249,10 +249,10 @@ fun ProductDetailScreen(
                     }
                 }
             }, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)) {
-                Text("🖼️ Galería", color = MaterialTheme.colorScheme.onSecondary)
+                Text("Galería", color = MaterialTheme.colorScheme.onSecondary)
             }
             Button(onClick = { reviewViewModel.fetchRandomCatImage() }) {
-                Text("🐱 Gato")
+                Text("Gato")
             }
         }
 
