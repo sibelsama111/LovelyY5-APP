@@ -105,9 +105,24 @@ fun NavGraph(
                 val orders by orderViewModel.orders.collectAsState()
                 OrderListScreen(
                     orders = orders,
-                    onOrderClick = { /* Navigation to order detail not implemented */ },
+                    onOrderClick = { orderId -> navController.navigate("order/$orderId") },
                     onBackClick = { navController.popBackStack() }
                 )
+            }
+            composable("order/{orderId}") { backStackEntry ->
+                val orderId = backStackEntry.arguments?.getString("orderId")
+                val orders by orderViewModel.orders.collectAsState()
+                val order = orders.find { it.id == orderId }
+                if (order != null) {
+                    OrderDetailScreen(
+                        order = order,
+                        productViewModel = productViewModel,
+                        onProductClick = { product -> navController.navigate("product/${product.id}") },
+                        onBackClick = { navController.popBackStack() }
+                    )
+                } else {
+                    Text("Pedido no encontrado")
+                }
             }
             composable("dopamina") {
                 DopaminaScreen(onBackClick = { navController.popBackStack() })
