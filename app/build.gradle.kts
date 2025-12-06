@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.google.services)
 }
 
 val localProperties = Properties()
@@ -22,7 +23,7 @@ android {
     defaultConfig {
         applicationId = "com.sibelsama.lovelyy5"
         minSdk = 30
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
@@ -78,6 +79,13 @@ dependencies {
     implementation(libs.ktor.client.content.negotiation)
     implementation(libs.ktor.serialization.kotlinx.json)
     implementation(libs.androidx.navigation.compose)
+    // Firebase
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.firestore)
+    implementation(libs.firebase.auth)
+    implementation(libs.firebase.storage)
+    implementation(libs.firebase.analytics)
+    implementation(libs.kotlinx.coroutines.play.services)
     testImplementation(libs.junit)
     testImplementation(libs.mockk)
     testImplementation(libs.kotlinx.coroutines.test)

@@ -40,6 +40,7 @@ fun HomeScreen(
     onCategoryClick: (String) -> Unit,
     onSeeAllProducts: () -> Unit = {},
     onSeeAllCategories: () -> Unit = {},
+    onProfileClick: () -> Unit = {},
     cartViewModel: CartViewModel = viewModel()
 ) {
     val productVm: ProductViewModel = viewModel()
@@ -64,15 +65,23 @@ fun HomeScreen(
         Spacer(modifier = Modifier.height(20.dp))
 
 
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-            IconButton(onClick = onCartClick) {
-                Icon(Icons.Default.ShoppingCart, contentDescription = "Carrito")
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            // Botón de perfil a la izquierda
+            IconButton(onClick = onProfileClick) {
+                Icon(Icons.Default.Person, contentDescription = "Mi Perfil")
             }
-            Spacer(modifier = Modifier.width(8.dp))
-            Button(onClick = onOrdersClick) {
-                Icon(Icons.Default.Receipt, contentDescription = "Mis Pedidos")
+
+            // Botones de carrito y pedidos a la derecha
+            Row {
+                IconButton(onClick = onCartClick) {
+                    Icon(Icons.Default.ShoppingCart, contentDescription = "Carrito")
+                }
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Mis Pedidos")
+                Button(onClick = onOrdersClick) {
+                    Icon(Icons.Default.Receipt, contentDescription = "Mis Pedidos")
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Mis Pedidos")
+                }
             }
         }
 

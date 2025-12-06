@@ -4,6 +4,7 @@ import android.app.Application
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import com.sibelsama.lovelyy5.data.FirebaseConfig
 import com.sibelsama.lovelyy5.ui.theme.LovelyY5APPTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
@@ -12,6 +13,7 @@ import com.sibelsama.lovelyy5.ui.viewmodels.CartViewModel
 import com.sibelsama.lovelyy5.ui.viewmodels.ReviewViewModel
 import com.sibelsama.lovelyy5.ui.viewmodels.ProductViewModel
 import com.sibelsama.lovelyy5.ui.viewmodels.OrderViewModel
+import com.sibelsama.lovelyy5.ui.viewmodels.AuthViewModel
 import com.sibelsama.lovelyy5.ui.viewmodels.ViewModelFactory
 import com.sibelsama.lovelyy5.ui.screens.NavGraph
 import com.sibelsama.lovelyy5.ui.screens.SplashScreen
@@ -19,6 +21,10 @@ import com.sibelsama.lovelyy5.ui.screens.SplashScreen
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Inicializar Firebase
+        FirebaseConfig.initialize()
+
         setContent {
             LovelyY5APPTheme {
                 var showSplash by remember { mutableStateOf(true) }
@@ -33,8 +39,9 @@ class MainActivity : ComponentActivity() {
                     val reviewViewModel: ReviewViewModel = viewModel(factory = factory)
                     val productViewModel: ProductViewModel = viewModel(factory = factory)
                     val orderViewModel: OrderViewModel = viewModel(factory = factory)
+                    val authViewModel: AuthViewModel = viewModel(factory = factory)
 
-                    NavGraph(cartViewModel, reviewViewModel, productViewModel, orderViewModel)
+                    NavGraph(cartViewModel, reviewViewModel, productViewModel, orderViewModel, authViewModel)
                 }
             }
         }

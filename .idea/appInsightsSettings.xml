@@ -9,10 +9,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="com.sibelsama.lovelyy5" />
+                  <option name="mobileSdkAppId" value="1:912174090681:android:1e2a69e19fd1689de80e68" />
+                  <option name="projectId" value="lovely-y5-webstore" />
+                  <option name="projectNumber" value="912174090681" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />

@@ -39,8 +39,8 @@ class ReviewViewModelTest {
     }
 
     @Test
-    fun `addImageToNewReview should add image to list`() {
-        reviewViewModel = ReviewViewModel(application)
+    fun `addImageToNewReview should add image to list`() = runTest(testDispatcher) {
+        reviewViewModel = ReviewViewModel(application, ioDispatcher = testDispatcher)
         val imageUrl = "https://example.com/cat.jpg"
 
         assertEquals(0, reviewViewModel.newReviewImages.value.size)
@@ -52,8 +52,8 @@ class ReviewViewModelTest {
     }
 
     @Test
-    fun `removeImageFromNewReview should remove image from list`() {
-        reviewViewModel = ReviewViewModel(application)
+    fun `removeImageFromNewReview should remove image from list`() = runTest(testDispatcher) {
+        reviewViewModel = ReviewViewModel(application, ioDispatcher = testDispatcher)
         val imageUrl1 = "https://example.com/cat1.jpg"
         val imageUrl2 = "https://example.com/cat2.jpg"
 
@@ -68,8 +68,8 @@ class ReviewViewModelTest {
     }
 
     @Test
-    fun `clearNewReviewImages should clear all images`() {
-        reviewViewModel = ReviewViewModel(application)
+    fun `clearNewReviewImages should clear all images`() = runTest(testDispatcher) {
+        reviewViewModel = ReviewViewModel(application, ioDispatcher = testDispatcher)
         reviewViewModel.addImageToNewReview("https://example.com/cat1.jpg")
         reviewViewModel.addImageToNewReview("https://example.com/cat2.jpg")
 

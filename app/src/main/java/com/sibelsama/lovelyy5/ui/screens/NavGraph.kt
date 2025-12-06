@@ -23,21 +23,29 @@ import com.sibelsama.lovelyy5.ui.viewmodels.CartViewModel
 import com.sibelsama.lovelyy5.ui.viewmodels.OrderViewModel
 import com.sibelsama.lovelyy5.ui.viewmodels.ProductViewModel
 import com.sibelsama.lovelyy5.ui.viewmodels.ReviewViewModel
+import com.sibelsama.lovelyy5.ui.viewmodels.AuthViewModel
+import com.sibelsama.lovelyy5.ui.screens.auth.LoginScreen
+import com.sibelsama.lovelyy5.ui.screens.auth.RegisterScreen
+import com.sibelsama.lovelyy5.ui.screens.auth.ProfileScreen
 
 @Composable
 fun NavGraph(
     cartViewModel: CartViewModel = viewModel(),
     reviewViewModel: ReviewViewModel = viewModel(),
     productViewModel: ProductViewModel = viewModel(),
-    orderViewModel: OrderViewModel = viewModel()
+    orderViewModel: OrderViewModel = viewModel(),
+    authViewModel: AuthViewModel = viewModel()
 ) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
+    val isLoggedIn by authViewModel.isLoggedIn.collectAsState(initial = false)
+
     Scaffold(
         floatingActionButton = {
-            if (currentRoute != "cart" && currentRoute != "orders" && currentRoute != "dopamina") {
+            if (currentRoute != "cart" && currentRoute != "orders" && currentRoute != "dopamina" &&
+                currentRoute != "login" && currentRoute != "register") {
                 FloatingActionButton(onClick = { navController.navigate("dopamina") }) {
                     Icon(Icons.Default.Pets, contentDescription = "Dopamina")
                 }
@@ -46,7 +54,7 @@ fun NavGraph(
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = "home",
+            startDestination = if (isLoggedIn) "home" else "login",
             modifier = Modifier.padding(innerPadding)
         ) {
             composable("home") {
@@ -57,6 +65,7 @@ fun NavGraph(
                     onCategoryClick = { category -> navController.navigate("products/$category") },
                     onSeeAllProducts = { navController.navigate("products") },
                     onSeeAllCategories = { navController.navigate("products") },
+                    onProfileClick = { navController.navigate("profile") },
                     cartViewModel = cartViewModel
                 )
             }
@@ -126,6 +135,43 @@ fun NavGraph(
             }
             composable("dopamina") {
                 DopaminaScreen(onBackClick = { navController.popBackStack() })
+            }
+
+            // Pantallas de autenticación
+            composable("login") {
+                LoginScreen(
+                    onNavigateToRegister = { navController.navigate("register") },
+                    onLoginSuccess = {
+                        navController.navigate("home") {
+                            popUpTo("login") { inclusive = true }
+                        }
+                    },
+                    authViewModel = authViewModel
+                )
+            }
+
+            composable("register") {
+                RegisterScreen(
+                    onNavigateToLogin = { navController.popBackStack() },
+                    onRegisterSuccess = {
+                        navController.navigate("home") {
+                            popUpTo("register") { inclusive = true }
+                        }
+                    },
+                    authViewModel = authViewModel
+                )
+            }
+
+            composable("profile") {
+                ProfileScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    onLogout = {
+                        navController.navigate("login") {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    },
+                    authViewModel = authViewModel
+                )
             }
         }
     }

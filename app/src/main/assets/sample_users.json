@@ -1,0 +1,71 @@
+[
+  {
+    "rut": "123456789",
+    "nombres": "Admin",
+    "apellidos": "Sistema",
+    "email": "admin@lovelyy5.cl",
+    "passwd": "admin123",
+    "telefono": 912345678,
+    "rol": "admin",
+    "fotoPerfil": "a",
+    "createdAt": "2025-11-21T06:48:12Z",
+    "direccion": {
+      "calle": "Av. Providencia",
+      "numero": 123,
+      "comuna": "Las Condes",
+      "region": "Región Metropolitana"
+    }
+  },
+  {
+    "rut": "123456785",
+    "nombres": "Juan Carlos",
+    "apellidos": "González Silva",
+    "email": "juan.gonzalez@lovelyy5.cl",
+    "passwd": "juan123",
+    "telefono": 912345678,
+    "rol": "cliente",
+    "fotoPerfil": "",
+    "createdAt": "2025-12-05T15:30:00Z",
+    "direccion": {
+      "calle": "Las Condes",
+      "numero": 456,
+      "comuna": "Las Condes",
+      "region": "Región Metropolitana"
+    }
+  },
+  {
+    "rut": "159876542",
+    "nombres": "Pedro",
+    "apellidos": "López Martínez",
+    "email": "pedro.lopez@lovelyy5.cl",
+    "passwd": "pedro123",
+    "telefono": 955887766,
+    "rol": "trabajador",
+    "fotoPerfil": "",
+    "createdAt": "2025-12-04T12:00:00Z",
+    "direccion": {
+      "calle": "Ñuñoa",
+      "numero": 789,
+      "comuna": "Ñuñoa",
+      "region": "Región Metropolitana"
+    }
+  },
+  {
+    "rut": "201234567",
+    "nombres": "María",
+    "apellidos": "Rodríguez Pérez",
+    "email": "maria.rodriguez@lovelyy5.cl",
+    "passwd": "maria123",
+    "telefono": 967123456,
+    "rol": "cliente",
+    "fotoPerfil": "",
+    "createdAt": "2025-12-06T08:00:00Z",
+    "direccion": {
+      "calle": "Pedro de Valdivia",
+      "numero": 123,
+      "comuna": "Providencia",
+      "region": "Región Metropolitana"
+    }
+  }
+]
+

@@ -33,6 +33,9 @@ class ViewModelFactory(private val application: Application) : ViewModelProvider
             modelClass.isAssignableFrom(OrderViewModel::class.java) -> {
                 OrderViewModel(application) as T
             }
+            modelClass.isAssignableFrom(AuthViewModel::class.java) -> {
+                AuthViewModel(application) as T
+            }
             // For ViewModels without special dependencies, you can add them here
             // or let the default factory handle them.
             else -> throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")

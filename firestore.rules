@@ -1,0 +1,98 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ⚠️ REGLAS TEMPORALES PARA DESARROLLO Y POSTMAN
+    // CAMBIAR ANTES DE PRODUCCIÓN
+    match /{document=**} {
+      allow read, write: if true;
+    }
+
+    // Función auxiliar para verificar admin (para uso futuro)
+    function isAdmin() {
+      return request.auth != null &&
+             request.auth.token.admin == true;
+    }
+
+    // Función auxiliar para verificar autenticación (para uso futuro)
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Función auxiliar para verificar que el email coincide (para uso futuro)
+    function isOwner(email) {
+      return request.auth != null &&
+             request.auth.token.email == email;
+    }
+
+    // ========================================
+    // COLECCIÓN: PRODUCTS
+    // ========================================
+    match /products/{productId} {
+      // Lectura: Todos (pública)
+      allow read: if true;
+
+      // Escritura: Solo administradores
+      // Para desarrollo, puedes cambiar a: if true
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ========================================
+    // COLECCIÓN: ORDERS
+    // ========================================
+    match /orders/{orderId} {
+      // Lectura: Solo el dueño de la orden o admin
+      // Para desarrollo: if true
+      allow read: if isAuthenticated() || isAdmin();
+
+      // Creación: Cualquiera puede crear una orden (checkout público)
+      allow create: if true;
+
+      // Actualización y eliminación: Solo admin
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ========================================
+    // COLECCIÓN: REVIEWS
+    // ========================================
+    match /reviews/{reviewId} {
+      // Lectura: Todos (pública)
+      allow read: if true;
+
+      // Creación: Cualquiera puede crear reviews
+      // Para producción, considera: if isAuthenticated()
+      allow create: if true;
+
+      // Actualización y eliminación: Solo el creador o admin
+      // Para desarrollo: if true
+      allow update: if isAuthenticated() || isAdmin();
+      allow delete: if isAuthenticated() || isAdmin();
+    }
+
+    // ========================================
+    // COLECCIÓN: USERS (opcional para futura implementación)
+    // ========================================
+    match /users/{userId} {
+      // Los usuarios solo pueden leer y escribir sus propios datos
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      allow write: if isAuthenticated() && request.auth.uid == userId;
+
+      // Admin puede leer todos los usuarios
+      allow read: if isAdmin();
+    }
+
+    // ========================================
+    // CONFIGURACIÓN DE DESARROLLO (TEMPORAL)
+    // ========================================
+    // IMPORTANTE: Comenta estas reglas en producción
+    // Descomentar estas líneas para permitir acceso completo durante desarrollo:
+
+    // match /{document=**} {
+    //   allow read, write: if true;
+    // }
+  }
+}
+
